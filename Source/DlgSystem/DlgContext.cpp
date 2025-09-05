@@ -11,8 +11,6 @@
 #include "Nodes/DlgNode_SpeechSequence.h"
 #include "DlgDialogueParticipant.h"
 #include "DlgMemory.h"
-#include "Components/AudioComponent.h"
-#include "Engine/Texture2D.h"
 #include "Logging/DlgLogger.h"
 
 
@@ -52,21 +50,16 @@ void UDlgContext::OnRep_SerializedParticipants()
 
 bool UDlgContext::ChooseOption(int32 OptionIndex)
 {
-	if(bDialogueEnded)
-		return false;
 	check(Dialogue);
-	if (IsValid(Dialogue))
+	if (UDlgNode* Node = GetMutableActiveNode())
 	{
-		if (UDlgNode* Node = GetMutableActiveNode())
+		if (Node->OptionSelected(OptionIndex, false, *this))
 		{
-			if (Node->OptionSelected(OptionIndex, false, *this))
-			{
-				return true;
-			}
+			return true;
 		}
 	}
 
-	SetDialogueEnded(true, false);
+	bDialogueEnded = true;
 	return false;
 }
 
@@ -81,7 +74,7 @@ bool UDlgContext::ChooseSpeechSequenceOptionFromReplicated(int32 OptionIndex)
 		}
 	}
 
-	SetDialogueEnded(true, false);
+	bDialogueEnded = true;
 	return false;
 }
 
@@ -90,7 +83,7 @@ bool UDlgContext::ChooseOptionFromAll(int32 Index)
 	if (!AllChildren.IsValidIndex(Index))
 	{
 		LogErrorWithContext(FString::Printf(TEXT("ChooseOptionFromAll - INVALID given Index = %d"), Index));
-		SetDialogueEnded(true, false);
+		bDialogueEnded = true;
 		return false;
 	}
 
@@ -102,7 +95,7 @@ bool UDlgContext::ChooseOptionFromAll(int32 Index)
 		}
 	}
 
-	SetDialogueEnded(true, false);
+	bDialogueEnded = true;
 	return false;
 }
 
@@ -117,25 +110,6 @@ bool UDlgContext::ReevaluateOptions()
 	}
 
 	return Node->ReevaluateChildren(*this, {});
-}
-
-void UDlgContext::SetDialogueEnded(bool isDialogueEnded, bool isInterrupted)
-{
-	bDialogueEnded = isDialogueEnded;
-	auto ParticipantsArray = GetParticipants();
-	for (auto Participant : ParticipantsArray)
-	{
-		if (!Participant.Key.IsEqual("Player"))
-		{
-			IDlgDialogueParticipant::Execute_OnDialogueEnded(Participant.Value, this, isInterrupted);
-		}
-	}
-	UObject* PlayerParticipant = GetMutableParticipant(FName("Player"));
-	if (PlayerParticipant)
-		IDlgDialogueParticipant::Execute_OnDialogueEnded(PlayerParticipant, this, isInterrupted);
-	else
-		UE_LOG(LogTemp, Error, TEXT("Player is not a dialogue participant and can't receive OnDialogueStep event. Please set Player on atleast one dialogue node as participant"))
-
 }
 
 const FText& UDlgContext::GetOptionText(int32 OptionIndex) const
@@ -247,7 +221,6 @@ const FText& UDlgContext::GetActiveNodeText() const
 	return Node->GetNodeText();
 }
 
-
 FName UDlgContext::GetActiveNodeSpeakerState() const
 {
 	const UDlgNode* Node = GetActiveNode();
@@ -294,18 +267,6 @@ UDialogueWave* UDlgContext::GetActiveNodeVoiceDialogueWave() const
 	}
 
 	return Node->GetNodeVoiceDialogueWave();
-}
-
-UFMODEvent* UDlgContext::GetActiveNodeFmodEvent() const
-{
-	const UDlgNode* Node = GetActiveNode();
-	if (!IsValid(Node))
-	{
-		LogErrorWithContext(TEXT("GetActiveNodeFMODEvent - INVALID Active Node"));
-		return nullptr;
-	}
-
-	return Node->GetNodeFMODEvent();
 }
 
 UObject* UDlgContext::GetActiveNodeGenericData() const
@@ -365,7 +326,7 @@ UObject* UDlgContext::GetActiveNodeParticipant() const
 	}
 
 	const FName SpeakerName = Node->GetNodeParticipantName();
-	auto* ObjectPtr = Participants.Find(SpeakerName);
+	auto* ObjectPtr = Participants.Find(Node->GetNodeParticipantName());
 	if (ObjectPtr == nullptr || !IsValid(*ObjectPtr))
 	{
 		LogErrorWithContext(FString::Printf(
@@ -388,29 +349,6 @@ FName UDlgContext::GetActiveNodeParticipantName() const
 	}
 
 	return Node->GetNodeParticipantName();
-}
-
-UAudioComponent* UDlgContext::GetActiveNodeParticipantAudioComponent() const
-{
-	const UDlgNode* Node = GetActiveNode();
-	if (!IsValid(Node))
-	{
-		LogErrorWithContext(TEXT("GetActiveNodeParticipantAudioComponent - INVALID Active Node"));
-		return nullptr;
-	}
-
-	const FName SpeakerName = Node->GetNodeParticipantName();
-	auto* ObjectPtr = Participants.Find(SpeakerName);
-	if (ObjectPtr == nullptr || !IsValid(*ObjectPtr))
-	{
-		LogErrorWithContext(FString::Printf(
-            TEXT("GetActiveNodeParticipantAudioComponent - The ParticipantName = `%s` from the Active Node does NOT exist in the current Participants"),
-            *SpeakerName.ToString()
-        ));
-		return nullptr;
-	}
-
-	return IDlgDialogueParticipant::Execute_GetParticipantAudioComponent(*ObjectPtr);
 }
 
 FText UDlgContext::GetActiveNodeParticipantDisplayName() const
@@ -734,50 +672,6 @@ bool UDlgContext::CanBeStarted(UDlgDialogue* InDialogue, const TMap<FName, UObje
 	return false;
 }
 
-FGuid UDlgContext::CanBeStartedFromStartNode(UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants, const UDlgNode_Start* StartNode)
-{
-	if (!ValidateParticipantsMapForDialogue(TEXT("CanBeStarted"), InDialogue, InParticipants, false))
-	{
-		return FGuid();
-	}
-
-	// Get first participant
-	UObject* FirstParticipant = nullptr;
-	for (const auto& KeyValue : InParticipants)
-	{
-		if (KeyValue.Value)
-		{
-			FirstParticipant = KeyValue.Value;
-			break;
-		}
-	}
-	check(FirstParticipant != nullptr);
-
-	// Create temporary context that is Garbage Collected after this function returns (hopefully)
-	auto* Context = NewObject<UDlgContext>(FirstParticipant, UDlgContext::StaticClass());
-	Context->Dialogue = InDialogue;
-	Context->SetParticipants(InParticipants);
-
-	// Evaluate edges/children of the start node
-	if (StartNode)
-	{
-		for (const FDlgEdge& ChildLink : StartNode->GetNodeChildren())
-		{
-			if (ChildLink.Evaluate(*Context, {}))
-			{
-				// Simulate EnterNode
-				UDlgNode* Node = Context->GetMutableNodeFromIndex(ChildLink.TargetIndex);
-				if (Node && Node->HasAnySatisfiedChild(*Context, {}))
-				{
-					return Node->GetGUID();
-				}
-			}
-		}
-	}
-
-	return FGuid();
-}
-
 bool UDlgContext::StartWithContext(const FString& ContextString, UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants)
 {
 	const FString ContextMessage = ContextString.IsEmpty()
@@ -795,23 +689,10 @@ bool UDlgContext::StartWithContext(const FString& ContextString, UDlgDialogue* I
 
 	for (const UDlgNode* StartNode : Dialogue->GetStartNodes())
 	{
-		//TODO: this is very strange. Some dialogues contain Speech nodes in start nodes array
-		const UDlgNode_Start* StartNodeCasted = Cast<UDlgNode_Start>(StartNode);
-		if (StartNodeCasted && StartNodeCasted->bExcludeFromDefaultStart)
-		{
-			continue;
-		}
-
 		for (const FDlgEdge& ChildLink : StartNode->GetNodeChildren())
 		{
 			if (ChildLink.Evaluate(*this, {}))
 			{
-				auto ParticipantsArray = GetParticipants();
-				for (auto Participant : ParticipantsArray)
-				{
-					IDlgDialogueParticipant::Execute_OnDialogueStart(Participant.Value, this);
-				}
-
 				if (EnterNode(ChildLink.TargetIndex, {}))
 				{
 					return true;
@@ -856,34 +737,6 @@ bool UDlgContext::StartWithContextFromNode(
 	}
 
 	UDlgNode* Node = GetMutableNodeFromIndex(StartNodeIndex);
-
-	if (StartNodeGUID.IsValid() && !IsValid(Node))
-	{
-		for (const UDlgNode* StartNode : InDialogue->GetStartNodes())
-		{
-			if (StartNodeGUID == StartNode->GetGUID())
-			{
-				for (const FDlgEdge& ChildLink : StartNode->GetNodeChildren())
-				{
-					if (ChildLink.Evaluate(*this, {}))
-					{
-						// Simulate EnterNode
-						UDlgNode* TargetNode = GetMutableNodeFromIndex(ChildLink.TargetIndex);
-						if (IsValid(TargetNode) && TargetNode->HasAnySatisfiedChild(*this, {}))
-						{
-							Node = TargetNode;
-							break;
-						}
-					}
-				}
-			}
-
-			if (IsValid(Node)) break;
-		}
-	}
-
-
-
 	if (!IsValid(Node))
 	{
 		LogErrorWithContext(FString::Printf(
@@ -891,14 +744,6 @@ bool UDlgContext::StartWithContextFromNode(
 			*ContextMessage, StartNodeIndex, *StartNodeGUID.ToString()
 		));
 		return false;
-	}
-
-	StartNodeIndex = GetNodeIndexForGUID(Node->GetGUID());
-
-	auto ParticipantsArray = GetParticipants();
-	for (auto Participant : ParticipantsArray)
-	{
-		IDlgDialogueParticipant::Execute_OnDialogueStart(Participant.Value, this);
 	}
 
 	if (bFireEnterEvents)

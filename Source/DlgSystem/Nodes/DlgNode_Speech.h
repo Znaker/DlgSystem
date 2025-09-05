@@ -8,7 +8,6 @@
 
 class USoundWave;
 class UDialogueWave;
-class UFMODEvent;
 struct FDlgTextArgument;
 
 /**
@@ -74,15 +73,10 @@ public:
 	const FText& GetNodeUnformattedText() const override { return Text; }
 	UDlgNodeData* GetNodeData() const override { return NodeData; }
 
-	virtual const bool HasTypewriterEffect() const override{ return bTypewriterEffect; }
-
-	virtual const float GetTypewriterTypingDelay() const override { return TypingDelay; }
-
 	// stuff we have to keep for legacy reason (but would make more sense to remove them from the plugin as they could be created in NodeData):
 	FName GetSpeakerState() const override { return SpeakerState; }
 	USoundBase* GetNodeVoiceSoundBase() const override { return VoiceSoundWave; }
 	UDialogueWave* GetNodeVoiceDialogueWave() const override { return VoiceDialogueWave; }
-	UFMODEvent* GetNodeFMODEvent() const override { return FMODSoundEvent; }
 	UObject* GetNodeGenericData() const override { return GenericData; }
 
 	void AddAllSpeakerStatesIntoSet(TSet<FName>& OutStates) const override { OutStates.Add(SpeakerState); }
@@ -115,18 +109,12 @@ public:
 	void SetVoiceDialogueWave(UDialogueWave* InVoiceDialogueWave) { VoiceDialogueWave = InVoiceDialogueWave; }
 	void SetGenericData(UObject* InGenericData) { GenericData = InGenericData; }
 
-	UFUNCTION(BlueprintCallable)
-	void RebuildNextSpeechTimer();
-
 	// Helper functions to get the names of some properties. Used by the DlgSystemEditor module.
 	static FName GetMemberNameText() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, Text); }
 	static FName GetMemberNameTextArguments() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, TextArguments); }
-	static FName GetMemberNameHasTypewriterEffect() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, bTypewriterEffect); }
-	static FName GetMemberNameTypewriterDelay() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, TypingDelay); }
 	static FName GetMemberNameNodeData() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, NodeData); }
 	static FName GetMemberNameVoiceSoundWave() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, VoiceSoundWave); }
 	static FName GetMemberNameVoiceDialogueWave() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, VoiceDialogueWave); }
-	static FName GetMemberNameFMODEvent() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, FMODSoundEvent); }
 	static FName GetMemberNameGenericData() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, GenericData); }
 	static FName GetMemberNameSpeakerState() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, SpeakerState); }
 	static FName GetMemberNameIsVirtualParent() { return GET_MEMBER_NAME_CHECKED(UDlgNode_Speech, bIsVirtualParent); }
@@ -148,18 +136,12 @@ protected:
 
 	// Text that will appear when this node participant name speaks to someone else.
 	// If you want replaceable portions inside your Text nodes just add {identifier} inside it and set the value it should have at runtime.
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", Meta = (MultiLine = true, DisplayPriority=0))
+	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", Meta = (MultiLine = true))
 	FText Text;
 
 	// If you want replaceable portions inside your Text nodes just add {identifier} inside it and set the value it should have at runtime.
 	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Dialogue|Node")
 	TArray<FDlgTextArgument> TextArguments;
-
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node")
-	bool bTypewriterEffect = false;
-
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", meta = (EditCondition = "bTypewriterEffect", EditConditionHides))
-	float TypingDelay = 0.5;
 
 	// State of the speaker attached to this node. Passed to the GetParticipantIcon function.
 	UPROPERTY(EditAnywhere, Category = "Dialogue|Node")
@@ -180,9 +162,6 @@ protected:
 	// NOTE: You should probably use the NodeData
 	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", Meta = (DlgSaveOnlyReference))
 	UDialogueWave* VoiceDialogueWave = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", Meta = (DlgSaveOnlyReference))
-	UFMODEvent* FMODSoundEvent;
 
 	// Any generic object you would like
 	// NOTE: You should probably use the NodeData

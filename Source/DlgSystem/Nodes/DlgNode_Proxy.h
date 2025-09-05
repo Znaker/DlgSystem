@@ -41,7 +41,7 @@ public:
 	//
 
 	/** Called when dialogue indicies are rebuilt, updates the index so it points to the same node after the change */
-	void RemapOldIndicesWithNew(const TMap<int32, int32>& OldToNewIndexMap) override;
+	void RemapOldIndicesWithNew(const TMap<int32, int32>& OldToNewIndexMap);
 
 	// return with the index of the target in the UDlgDialogue::Nodes array
 	int32 GetTargetNodeIndex() const { return NodeIndex; }
@@ -53,6 +53,6 @@ public:
 protected:
 
 	// Index of the node the Proxy represents (in UDlgDialogue::Nodes)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue", meta=(NoSpinbox=true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
 	int32 NodeIndex = 0;
 };

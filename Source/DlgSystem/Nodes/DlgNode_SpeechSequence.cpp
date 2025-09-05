@@ -71,8 +71,8 @@ void UDlgNode_SpeechSequence::UpdateTextsNamespacesAndKeys(const UDlgSystemSetti
 
 	for (FDlgSpeechSequenceEntry& Entry : SpeechSequence)
 	{
-		FDlgLocalizationHelper::UpdateTextNamespaceAndKey(Outer, GetNodeParticipantName(), Settings, Entry.Text);
-		FDlgLocalizationHelper::UpdateTextNamespaceAndKey(Outer, GetNodeParticipantName(), Settings, Entry.EdgeText);
+		FDlgLocalizationHelper::UpdateTextNamespaceAndKey(Outer, Settings, Entry.Text);
+		FDlgLocalizationHelper::UpdateTextNamespaceAndKey(Outer, Settings, Entry.EdgeText);
 	}
 
 	Super::UpdateTextsNamespacesAndKeys(Settings, bEdges, bUpdateGraphNode);
@@ -176,15 +176,6 @@ UDialogueWave* UDlgNode_SpeechSequence::GetNodeVoiceDialogueWave() const
 	return nullptr;
 }
 
-UFMODEvent* UDlgNode_SpeechSequence::GetNodeFMODEvent() const
-{
-	if (SpeechSequence.IsValidIndex(ActualIndex))
-	{
-		return SpeechSequence[ActualIndex].FMODEvent;
-	}
-
-	return nullptr;
-}
 UObject* UDlgNode_SpeechSequence::GetNodeGenericData() const
 {
 	if (SpeechSequence.IsValidIndex(ActualIndex))

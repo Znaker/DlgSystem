@@ -745,6 +745,7 @@ bool FDlgJsonParser::JsonValueToProperty(const TSharedPtr<FJsonValue>& JsonValue
 #else
 		const int32 ElementSize = Property->ElementSize;
 #endif
+
 		bReturnStatus &= ConvertScalarJsonValueToProperty(ArrayValue[Index], Property, ContainerPtr, ValueIntPtr + Index * ElementSize);
 	}
 	return bReturnStatus;

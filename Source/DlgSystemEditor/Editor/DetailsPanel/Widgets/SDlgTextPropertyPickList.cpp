@@ -6,6 +6,7 @@
 #include "Widgets/Views/STileView.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Layout/WidgetPath.h"
+
 #include "DlgSystem/NYEngineVersionHelpers.h"
 
 #define LOCTEXT_NAMESPACE "SDlgTextPropertyPickList"

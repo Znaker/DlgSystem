@@ -747,59 +747,6 @@ bool FDlgEditorUtilities::OpenEditorAndJumpToGraphNode(const UEdGraphNode* Graph
 	return false;
 }
 
-void FDlgEditorUtilities::OpenTextInputDialog(UDlgNode_Speech* SpeechNode)
-{
-	// Создаем текстовый ввод
-	TSharedPtr<SEditableTextBox> EditableTextBox;
-	TSharedRef<SWindow> DialogWindow = SNew(SWindow)
-		.Title(FText::FromString(TEXT("Введите текст")))
-		.ClientSize(FVector2D(400, 200))
-		.SupportsMinimize(false)
-		.SupportsMaximize(false)
-		[
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(10)
-			[
-				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("Введите текст:")))
-			]
-			+ SVerticalBox::Slot()
-			.FillHeight(1.0f)
-			.Padding(10)
-			[
-				SAssignNew(EditableTextBox, SEditableTextBox)
-			]
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(10)
-			[
-				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot()
-				.HAlign(HAlign_Right)
-				[
-					SNew(SButton)
-					.Text(FText::FromString(TEXT("ОК")))
-					.OnClicked_Lambda([EditableTextBox, DialogWindow, SpeechNode]()
-					{
-						// Обработка введенного текста
-						SpeechNode->SetNodeText(EditableTextBox->GetText());
-						//SpeechNode->UpdateGraphNode();
-						//UE_LOG(LogTemp, Log, TEXT("Введенный текст: %s"), *EnteredText);
-
-						// Закрыть окно
-						FSlateApplication::Get().RequestDestroyWindow(DialogWindow);
-						return FReply::Handled();
-					})
-				]
-			]
-		];
-
-	// Показать окно
-	FSlateApplication::Get().AddWindow(DialogWindow);
-}
-
 bool FDlgEditorUtilities::JumpToGraphNode(const UEdGraphNode* GraphNode)
 {
 	if (!IsValid(GraphNode))
@@ -1185,7 +1132,7 @@ UK2Node_Event* FDlgEditorUtilities::BlueprintGetEvent(UBlueprint* Blueprint, FNa
 	return nullptr;
 }
 
-UEdGraphNode_Comment* FDlgEditorUtilities::BlueprintAddComment(UBlueprint* Blueprint, const FString& CommentString, FVector2D Location)
+UEdGraphNode_Comment* FDlgEditorUtilities::BlueprintAddComment(UBlueprint* Blueprint, const FString& CommentString, FNYVector2f Location)
 {
 	if (!Blueprint || Blueprint->BlueprintType != BPTYPE_Normal || Blueprint->UbergraphPages.Num() == 0)
 	{

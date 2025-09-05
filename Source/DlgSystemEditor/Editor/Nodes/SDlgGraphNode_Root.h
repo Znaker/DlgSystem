@@ -22,7 +22,4 @@ public:
 private:
 	// The dialogue root this view represents
 	UDialogueGraphNode_Root* DialogueGraphNode_Root = nullptr;
-
-protected:
-	virtual TSharedRef<SWidget> GetNodeBodyWidget() override;
 };

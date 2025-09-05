@@ -38,7 +38,6 @@ bool UDlgNode_Proxy::CheckNodeEnterConditions(const UDlgContext& Context, TSet<c
 
 void UDlgNode_Proxy::RemapOldIndicesWithNew(const TMap<int32, int32>& OldToNewIndexMap)
 {
-	Super::RemapOldIndicesWithNew(OldToNewIndexMap);
 	if (const int32* NewIndexPtr = OldToNewIndexMap.Find(NodeIndex))
 	{
 		NodeIndex = *NewIndexPtr;

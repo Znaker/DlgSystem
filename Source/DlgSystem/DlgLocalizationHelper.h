@@ -21,10 +21,10 @@ public:
 #if WITH_EDITOR
 	// Updates the text namespace to match the settings options
 	// NOTE: only works in editor mode
-	static void UpdateTextNamespaceAndKey(const UObject* Object, FName ParticipantName, const UDlgSystemSettings& Settings, FText& Text);
+	static void UpdateTextNamespaceAndKey(const UObject* Object, const UDlgSystemSettings& Settings, FText& Text);
 #else
 	// NO OP
-	static void UpdateTextNamespaceAndKey(const UObject* Object, FName ParticipantName, const UDlgSystemSettings& Settings, FText& Text) {}
+	static void UpdateTextNamespaceAndKey(const UObject* Object, const UDlgSystemSettings& Settings, FText& Text) {}
 #endif
 
 	// Will we update the text namespace for the following texts
@@ -45,10 +45,10 @@ protected:
 	//		 false otherwise
 	static bool GetNewNamespaceAndKey(
 		const UObject* Object,
-		FName ParticipantName,
 		const UDlgSystemSettings& Settings,
 		const FText& Text,
-		FString& OutNewNamespace, FString& OutNewKey
+		FString& OutNewNamespace,
+		FString& OutNewKey
 	);
 
 #endif // WITH_EDITOR && USE_STABLE_LOCALIZATION_KEYS

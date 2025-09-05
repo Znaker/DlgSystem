@@ -414,6 +414,7 @@ TSharedPtr<FJsonValue> FDlgJsonWriter::PropertyToJsonValue(const FProperty* Prop
 #else
 		const int32 ElementSize = Property->ElementSize;
 #endif
+
 		const TSharedPtr<FJsonValue> JsonValue = ConvertScalarPropertyToJsonValue(Property, ContainerPtr, ValueIntPtr + Index * ElementSize);
 		if (JsonValue.IsValid())
 		{

@@ -28,26 +28,10 @@ public class DlgSystemEditor : ModuleRules
 
 		// Docs see https://docs.unrealengine.com/latest/INT/Programming/UnrealBuildSystem/ModuleFiles/
 
-		PublicIncludePaths.AddRange(
-			new string[] {
-				ModuleDirectory
-				// ... add public include paths required here ...
-			});
-
-
-		string PrivateDirectory = Path.Combine(ModuleDirectory, "Private");
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				ModuleDirectory
-				// ... add other private include paths required here ...
-			});
-
-
 		PublicDependencyModuleNames.AddRange(
 			new string[] {
 				"Core",
 				"DlgSystem",
-				"FMODStudio"
 				// ... add other public dependencies that you statically link with here ...
 			});
 
@@ -85,7 +69,7 @@ public class DlgSystemEditor : ModuleRules
 				"ContentBrowser",
 
 				// e.g. FPlatformApplicationMisc::ClipboardCopy
-				"ApplicationCore","UMG", "Blutility"
+				"ApplicationCore",
 			});
 
 #if UE_4_24_OR_LATER

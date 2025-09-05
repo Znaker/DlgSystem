@@ -57,17 +57,13 @@ public:
 	static const FName PROPERTY_GenericIcon;
 	static const FName PROPERTY_QuestionMarkIcon;
 
-	static const FName PROPERTY_RequestItemIcon;
-	static const FName PROPERTY_GivingItemIcon;
-	static const FName PROPERTY_InterruptIcon;
-	static const FName PROPERTY_StateIcon;
-	static const FName PROPERTY_ReturnIcon;
+	static const FName PROPERTY_ShowEdgeTextIcon;
 	static const FName PROPERTY_ShowPrimarySecondaryEdgesIcon;
 	static const FName PROPERTY_ShowEventsAndConditionsIcon;
 	static const FName PROPERTY_ReloadAssetIcon;
 	static const FName PROPERTY_OpenAssetIcon;
 	static const FName PROPERTY_FindAssetIcon;
-	static const FName PROPERTY_ShowEdgeTextIcon;
+
 	static const FName PROPERTY_SaveAllDialoguesIcon;
 	static const FName PROPERTY_DeleteAllDialoguesTextFilesIcon;
 	static const FName PROPERTY_DeleteCurrentDialogueTextFilesIcon;

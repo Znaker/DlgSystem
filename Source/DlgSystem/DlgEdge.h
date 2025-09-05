@@ -6,7 +6,7 @@
 #include "DlgCondition.h"
 #include "DlgEvent.h"
 #include "DlgTextArgument.h"
-#include "AnswerIntend.h"
+
 #include "DlgEdge.generated.h"
 
 class UDlgSystemSettings;
@@ -131,20 +131,6 @@ public:
 	// Set this to false in order to skip this edge in the AllChildren array (which lists both satisfied and not satisfied player choices
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DialogueEdge")
 	bool bIncludeInAllOptionListIfUnsatisfied = true;
-
-	EPlayerAnswerIntend GetOptionIntend() const{return EdgeIntend;}
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue|Edge")
-	EPlayerAnswerIntend EdgeIntend = {EPlayerAnswerIntend::BINT_Default};
-
-	//if empty - will capture all intends
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue|Edge")
-	TArray<EPlayerAnswerIntend> AnyControlledIntends;
-
-	TArray<EPlayerAnswerIntend> GetAnyControlledIntends() const {return AnyControlledIntends;};
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue|Edge")
-    bool bHiddenOption = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Instanced, Category = "DialogueEdge")
 	UDlgNodeData* EdgeData = nullptr;

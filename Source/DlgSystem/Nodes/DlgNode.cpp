@@ -3,11 +3,11 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
-#include "DlgSystem/DlgContext.h"
-#include "DlgSystem/DlgLocalizationHelper.h"
 #include "Sound/SoundWave.h"
-#include "DlgSystem/DlgManager.h"
+
+#include "DlgSystem/DlgContext.h"
 #include "DlgSystem/Logging/DlgLogger.h"
+#include "DlgSystem/DlgLocalizationHelper.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Begin UObject interface
@@ -76,7 +76,6 @@ void UDlgNode::PostInitProperties()
 		return;
 	}
 
-	NodeToReturnGUID = NodeGUID;
 	// GUID is set in the dialogue compile phase
 }
 
@@ -159,12 +158,6 @@ void UDlgNode::FireNodeEnterEvents(UDlgContext& Context)
 	}
 }
 
-void UDlgNode::ChooseOption(UDlgContext* Context, int32 OptionIndex)
-{
-	UDlgContext& LocalContext = *Context;
-	LocalContext.ChooseOption(OptionIndex);
-}
-
 bool UDlgNode::ReevaluateChildren(UDlgContext& Context, TSet<const UDlgNode*> AlreadyEvaluated)
 {
 	TArray<FDlgEdge>& AvailableOptions = Context.GetMutableOptionsArray();
@@ -206,16 +199,6 @@ bool UDlgNode::ReevaluateChildren(UDlgContext& Context, TSet<const UDlgNode*> Al
 				check(false);
 		}
 	}
-
-	UObject* ActiveParticipant = Context.GetActiveNodeParticipant();
-	if(ActiveParticipant)
-		IDlgDialogueParticipant::Execute_OnDialogueStep(ActiveParticipant, &Context);
-
-	UObject* PlayerParticipant = Context.GetMutableParticipant(FName("Player"));
-	if (PlayerParticipant)
-		IDlgDialogueParticipant::Execute_OnDialogueStep(PlayerParticipant, &Context);
-	else
-		UE_LOG(LogTemp, Error, TEXT("Player is not a dialogue participant and can't receive OnDialogueStep event. Please set Player on atleast one dialogue node as participant"))
 
 	return true;
 }
@@ -327,14 +310,6 @@ const TArray<int32> UDlgNode::GetNodeOpenChildren_DEPRECATED() const
 	return OutArray;
 }
 
-//bool UDlgNode::HasChildWithIntend(const EPlayerAnswerIntend CompareIntend) const
-//{
-	//return Children.ContainsByPredicate([CompareIntend](const FDlgEdge* Edge)
-	//{
-	//	return Edge->GetOptionIntend() == CompareIntend;
-	//});
-//}
-
 FDlgEdge* UDlgNode::GetMutableNodeChildForTargetIndex(int32 TargetIndex)
 {
 	for (FDlgEdge& Edge : Children)
@@ -422,40 +397,6 @@ void UDlgNode::UpdateGraphNode()
 {
 #if WITH_EDITOR
 	UDlgDialogue::GetDialogueEditorAccess()->UpdateGraphNodeEdges(GraphNode);
-
-	if (!bCustomReturn)
-	{
-
-		bool bSetted = false;
-		const TArray<FDlgEdge>& NodeEdges = GetNodeChildren();
-		for (auto Edge : NodeEdges)
-		{
-			if (Edge.GetOptionIntend()==EPlayerAnswerIntend::BINT_Default)
-			{
-				NodeToReturnGUID = GetDialogue()->GetNodeGUIDForIndex(Edge.TargetIndex);
-				bSetted = true;
-				break;
-			}
-		}
-
-		/*if (GetDialogue()->IsEndNode(GetDialogue()->GetNodeIndexForGUID(GetNodeGUIDToReturn())))
-		{
-			NodeToReturnGUID = GetGUID();
-			bSetted = true;
-		}*/
-
-		if (!bSetted)
-		{
-			if (GetNodeGUIDToReturn() != GetGUID())
-			{
-				NodeToReturnGUID = GetGUID();
-			}
-		}
-
-	}
-
-	NodeToReturnIndex = GetDialogue()->GetNodeIndexForGUID(GetNodeGUIDToReturn());
-
 #endif // WITH_EDITOR
 }
 
@@ -475,10 +416,6 @@ UDlgDialogue* UDlgNode::GetDialogue() const
 USoundWave* UDlgNode::GetNodeVoiceSoundWave() const
 {
 	return Cast<USoundWave>(GetNodeVoiceSoundBase());
-}
-
-void UDlgNode::RemapOldIndicesWithNew(const TMap<int32, int32>& OldToNewIndexMap)
-{
 }
 
 // End own functions

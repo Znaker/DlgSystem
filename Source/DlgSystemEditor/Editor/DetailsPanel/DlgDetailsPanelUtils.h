@@ -2,6 +2,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PropertyHandle.h"
+#include "PropertyEditorModule.h"
 
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode_Edge.h"
 #include "DlgSystemEditor/Editor/Nodes/DialogueGraphNode.h"
@@ -44,14 +46,6 @@ public:
 			   Settings->DialogueDisplayedVoiceFields == EDlgVoiceDisplayedFields::SoundWaveAndDialogueWave
 			   ? EVisibility::Visible : EVisibility::Hidden;
 	}
-
-	static EVisibility GetFmodEventVisibility()
-	{
-		const UDlgSystemSettings* Settings = GetDefault<UDlgSystemSettings>();
-		return Settings->DialogueDisplayedVoiceFields == EDlgVoiceDisplayedFields::FMODEvent
-			   ? EVisibility::Visible : EVisibility::Hidden;
-	}
-
 
 	static EVisibility GetSpeakerStateNodeVisibility()
 	{
@@ -119,18 +113,6 @@ public:
 			return;
 		}
 
-		const FString MinString = FString::FromInt(Min);
-		const FString MaxString = FString::FromInt(Max);
-		auto* Property = PropertyHandle->GetProperty();
-
-		// min
-		Property->SetMetaData(META_UIMin, *MinString);
-		Property->SetMetaData(META_ClampMin, *MinString);
-
-		// max
-		Property->SetMetaData(META_UIMax, *MaxString);
-		Property->SetMetaData(META_ClampMax, *MaxString);
-
 		// Clamp Current value if not in range
 		NumericType NumericValue;
 		if (PropertyHandle->GetValue(NumericValue) != FPropertyAccess::Success)
@@ -142,6 +124,17 @@ public:
 			return;
 		}
 
+		const FString MinString = FString::FromInt(Min);
+		const FString MaxString = FString::FromInt(Max);
+		auto* Property = PropertyHandle->GetProperty();
+
+		// min
+		Property->SetMetaData(META_UIMin, *MinString);
+		Property->SetMetaData(META_ClampMin, *MinString);
+
+		// max
+		Property->SetMetaData(META_UIMax, *MaxString);
+		Property->SetMetaData(META_ClampMax, *MaxString);
 	}
 
 	/** Gets the Base GraphNode owner that belongs to this PropertyHandle. It could be an Edge or a GraphNode */

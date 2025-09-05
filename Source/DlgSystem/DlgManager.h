@@ -183,8 +183,7 @@ public:
 	static TMap<FGuid, UDlgDialogue*> GetAllDialoguesGUIDsMap();
 
 	// Gets all the loaded dialogues from memory that have the ParticipantName included inside them.
-	UFUNCTION(BlueprintCallable)
-	static bool GetAllDialoguesForParticipantName(FName ParticipantName, TArray<UDlgDialogue*>& OutArray);
+	static TArray<UDlgDialogue*> GetAllDialoguesForParticipantName(FName ParticipantName);
 
 	// Sets the FDlgMemory Dialogue history.
 	UFUNCTION(BlueprintCallable, Category = "Dialogue|Memory")

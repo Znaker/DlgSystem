@@ -111,16 +111,6 @@ void FDlgSpeechSequenceEntry_Details::CustomizeChildren(TSharedRef<IPropertyHand
 		StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, VoiceDialogueWave)).ToSharedRef());
 	VoiceDialogueWavePropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK_STATIC(&FDlgDetailsPanelUtils::GetVoiceDialogueWaveVisibility));
 
-	// DialogueWave
-	FmodEventPropertyRow = &StructBuilder.AddProperty(
-		StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, FMODEvent)).ToSharedRef());
-	FmodEventPropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK_STATIC(&FDlgDetailsPanelUtils::GetFmodEventVisibility));
-
-	// FMOD event
-	VoiceDialogueWavePropertyRow = &StructBuilder.AddProperty(
-		StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, FMODEvent)).ToSharedRef());
-	VoiceDialogueWavePropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK_STATIC(&FDlgDetailsPanelUtils::GetFmodEventVisibility));
-
 	// Generic Data, can be FMOD sound
 	GenericDataPropertyRow = &StructBuilder.AddProperty(
 		StructPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FDlgSpeechSequenceEntry, GenericData)).ToSharedRef());

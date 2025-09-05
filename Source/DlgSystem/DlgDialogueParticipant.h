@@ -47,10 +47,6 @@ class DLGSYSTEM_API IDlgDialogueParticipant
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant")
 	UTexture2D* GetParticipantIcon(FName ActiveSpeaker, FName ActiveSpeakerState) const;
 
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant")
-    UAudioComponent* GetParticipantAudioComponent() const;
-
 	//
 	// Conditions
 	//
@@ -83,23 +79,6 @@ class DLGSYSTEM_API IDlgDialogueParticipant
 	// @return value: irrelevant
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant|Event")
 	bool OnDialogueEvent(UDlgContext* Context, FName EventName);
-
-	//Using for refresh dialogue widget and getting update on step
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant|Event")
-	bool OnDialogueStep(UDlgContext* Context);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant|Event")
-	bool OnDialogueEnded(UDlgContext* Context, bool isInterrupted);
-
-	//Fire when all dialogues ended
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant|Event")
-	bool OnDialoguesEndedCompletely();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant|Event")
-	bool OnDialogueStart(UDlgContext* Context);
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Dialogue|Participant|Event")
-	bool OnPlayerAnswer(UDlgDialogue* TargetDialogue, EPlayerAnswerIntend Intend);
 
 	// Used for the event type EDlgEventType::ModifyFloat (Modify Dialogue Float Value)
 	// @param	bDelta Whether we expect the value to be set or modified

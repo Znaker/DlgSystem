@@ -57,9 +57,6 @@ enum class EDlgVoiceDisplayedFields : uint8
 	// Only display the DialogueWave voice fields.
 	DialogueWave				UMETA(DisplayName = "Dialogue Wave"),
 
-	// Only display the DialogueWave voice fields.
-	FMODEvent					UMETA(DisplayName = "FMODEvent"),
-
 	// Display both SoundWave and DialogueWave fields.
 	SoundWaveAndDialogueWave	UMETA(DisplayName = "Sound Wave & Dialogue Wave")
 };
@@ -106,10 +103,7 @@ enum class EDlgTextNamespaceLocalization : uint8
 	WithPrefixPerDialogue UMETA(DisplayName = "Prefix + Namespace Per Dialogue (Prefix.DialogueName)"),
 
 	// The system sets the Namespace for Text fields for each dialogue into the same value. Unique keys are also generated.
-	Global				UMETA(DisplayName = "Global Namespace"),
-
-	// TALL CUSTOM Namespace Per
-	WithPrefixPerParticipant	UMETA(DisplayName = "Prefix + Namespace Per Participant")
+	Global				UMETA(DisplayName = "Global Namespace")
 };
 
 
@@ -457,18 +451,6 @@ public:
 	UPROPERTY(Category = "Graph Node", Config, EditAnywhere)
 	bool bShowHasGenericDataIcon = true;
 
-	//by Pecka
-	UPROPERTY(Category = "Graph Node", Config, EditAnywhere)
-	bool bShowHasRequestItemIcon = true;
-	UPROPERTY(Category = "Graph Node", Config, EditAnywhere)
-	bool bShowHasGivingItemIcon = true;
-	UPROPERTY(Category = "Graph Node", Config, EditAnywhere)
-	bool bShowHasCustomInterruptIcon = true;
-	UPROPERTY(Category = "Graph Node", Config, EditAnywhere)
-	bool bShowHasChangingNPCStateIcon = true;
-	UPROPERTY(Category = "Graph Node", Config, EditAnywhere)
-	bool bShowHasCustomReturnIcon = true;
-
 	//
 	// Colors based on https://material.io/guidelines/style/color.html#color-color-palette
 	//
@@ -503,10 +485,7 @@ public:
 
 	// The background color of the proxy node.
 	UPROPERTY(Category = "Graph Node Color", Config, EditAnywhere)
-	FLinearColor ProxyNodeColor = FLinearColor{ 0.01f, 0.2f, 0.09f, 1.f };
-
-	UPROPERTY(Category = "Graph Node Color", Config, EditAnywhere)
-	FLinearColor CycleNodeColor = FColor{152, 71, 62};
+	FLinearColor ProxyNodeColor = FLinearColor{ 0.01f, 0.2f, 0.09f, 1.f }; // greenish
 
 
 	// The background color of the node borders.
@@ -582,17 +561,9 @@ public:
 	UPROPERTY(Category = "Graph Edge Color", Config, EditAnywhere)
 	bool bShowDifferentColorForConditionWires = true;
 
-	// Does the wire use unique text color in the normal mode?
-	UPROPERTY(Category = "Graph Edge Color", Config, EditAnywhere)
-	bool bShowDifferentColorForUniqueTextWires = true;
-
 	// The color of the wire if the edge has any conditions.
 	UPROPERTY(Category = "Graph Edge Color", Config, EditAnywhere)
 	FLinearColor WireWithConditionsColor = FLinearColor{1.f, 0.341176f, 0.133333f, 1.0f}; // orangeish
-
-	// The color of the wire if the edge has any conditions.
-	UPROPERTY(Category = "Graph Edge Color", Config, EditAnywhere)
-	FLinearColor WireWithUniqueTextColor = FLinearColor{ 0.204f, 0.f, 0.102f, 1.0f };
 
 	// The color of the wire when hovered over
 	UPROPERTY(Category = "Graph Edge Color", Config, EditAnywhere)
@@ -662,11 +633,4 @@ public:
 	// The offset on the Y axis (up/down) to use when automatically positioning nodes.
 	UPROPERTY(Category = "Position", Config, EditAnywhere, AdvancedDisplay)
 	int32 OffsetBetweenRowsY = 200;
-
-
-	UPROPERTY(Category = "DialogueTimings", Config, EditAnywhere)
-	float SecondsFor10Char = 1.f;
-
-	UPROPERTY(Category = "DialogueTimings", Config, EditAnywhere)
-	float MinSpeechTime = 3.f;
 };

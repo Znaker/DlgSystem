@@ -39,45 +39,6 @@ enum class EDlgEntryRestriction : uint8
 	Once				UMETA(DisplayName = "Only Once")
 };
 
-USTRUCT(BlueprintType)
-struct FNodeInterruptInfo
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bInterruptible = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UDlgDialogue* DialogueOnTryInterrupt;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<EPlayerAnswerIntend> InterruptExceptions;
-};
-
-USTRUCT(BlueprintType)
-struct FDialogueItem
-{
-	GENERATED_USTRUCT_BODY()
-
-	FDialogueItem(){}
-	FDialogueItem(const FName InItemName, int32 InCount, UDlgDialogue* InDialogue, FGuid InTargetNodeID, int32 InMinMood)
-		: ItemName(InItemName),
-		Count(InCount),
-		TargetDialogue(InDialogue),
-		TargetNodeID(InTargetNodeID),
-		MinMood(InMinMood)
-	{
-	}
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName ItemName = NAME_None;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Count = 1;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UDlgDialogue* TargetDialogue = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FGuid TargetNodeID = FGuid();
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 MinMood = 0;
-};
 
 
 /**
@@ -204,31 +165,6 @@ public:
 
 	virtual void SetNodeEnterEvents(const TArray<FDlgEvent>& InEnterEvents) { EnterEvents = InEnterEvents; }
 
-
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-		virtual bool HasNextSpeechTimer() const { return fTimeToNextSpeech > 0.f; }
-
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-		virtual const float GetTimeToNextSpeech() const { return fTimeToNextSpeech; }
-
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-		virtual const FGuid GetNodeGUIDToReturn() const { return NodeToReturnGUID; }
-
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-		virtual const bool IsNodeCustomInterrupt() const { return bCustomInterrupt; }
-
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-	FNodeInterruptInfo GetNodeInterruptInfo() const { return InterruptInfo; }
-
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-	virtual const FDialogueItem GetGivingItemName() const { return GivingItem; }
-
-	virtual void SetTimeToNextSpeech(const float Time) { fTimeToNextSpeech = Time; }
-
-	//
-	// For the NextSpeechTimer
-	//
-
 	//
 	// For the Children
 	//
@@ -241,8 +177,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
 	virtual int32 GetNumNodeChildren() const { return Children.Num(); }
-
-	//virtual bool HasChildWithIntend(const EPlayerAnswerIntend CompareIntend) const;
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
 	virtual const FDlgEdge& GetNodeChildAt(int32 EdgeIndex) const { return Children[EdgeIndex]; }
@@ -331,9 +265,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
 	virtual UDialogueWave* GetNodeVoiceDialogueWave() const { return nullptr; }
 
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-	virtual class UFMODEvent*  GetNodeFMODEvent() const { return nullptr; }
-
 	// Gets the speaker state ordered to this node (can be used e.g. for icon selection)
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
 	virtual FName GetSpeakerState() const { return NAME_None; }
@@ -346,12 +277,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
 	virtual UDlgNodeData* GetNodeData() const { return nullptr; }
 
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-		virtual const bool HasTypewriterEffect() const { return false; }
-
-	UFUNCTION(BlueprintPure, Category = "Dialogue|Node")
-		virtual const float GetTypewriterTypingDelay() const { return 0.0f; }
-
 	// Helper method to get directly the Dialogue (which is our parent)
 	UDlgDialogue* GetDialogue() const;
 
@@ -361,14 +286,6 @@ public:
 	static FName GetMemberNameEnterConditions() { return GET_MEMBER_NAME_CHECKED(UDlgNode, EnterConditions); }
 	static FName GetMemberNameEnterRestriction() { return GET_MEMBER_NAME_CHECKED(UDlgNode, EnterRestriction); }
 	static FName GetMemberNameEnterEvents() { return GET_MEMBER_NAME_CHECKED(UDlgNode, EnterEvents); }
-	static FName GetMemberNameNextSpeechTimer() { return GET_MEMBER_NAME_CHECKED(UDlgNode, fTimeToNextSpeech); }
-	static FName GetMemberNameCustomReturn() { return GET_MEMBER_NAME_CHECKED(UDlgNode, bCustomReturn); }
-	static FName GetMemberNameNodeToReturnGUID() { return GET_MEMBER_NAME_CHECKED(UDlgNode, NodeToReturnGUID); }
-	static FName GetMemberNameNodeToReturnIndex() { return GET_MEMBER_NAME_CHECKED(UDlgNode, NodeToReturnIndex); }
-	static FName GetMemberNameNodeIsCustomInterrupt() { return GET_MEMBER_NAME_CHECKED(UDlgNode, bCustomInterrupt); }
-	static FName GetMemberNameNodeInterruptInfo() { return GET_MEMBER_NAME_CHECKED(UDlgNode, InterruptInfo); }
-	static FName GetMemberGivingNameItemName() { return GET_MEMBER_NAME_CHECKED(UDlgNode, GivingItem); }
-	static FName GetMemberGettingNameItemName() { return GET_MEMBER_NAME_CHECKED(UDlgNode, RequestItem); }
 	static FName GetMemberNameChildren() { return GET_MEMBER_NAME_CHECKED(UDlgNode, Children); }
 	static FName GetMemberNameGUID() { return GET_MEMBER_NAME_CHECKED(UDlgNode, NodeGUID); }
 
@@ -377,42 +294,6 @@ public:
 
 	// Fires this Node enter Events
 	void FireNodeEnterEvents(UDlgContext& Context);
-
-	UFUNCTION(BlueprintCallable)
-	void ChooseOption(UDlgContext* Context, int32 OptionIndex);
-
-	UPROPERTY(EditAnywhere, Category="Dialogue|Node", meta=(InlineEditConditionToggle))
-	bool bCustomTimer = false;
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", meta = (DisplayName = "Timer to next node", EditCondition=bCustomTimer))
-    float fTimeToNextSpeech = 3.f;
-
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", meta = (DisplayName = "Custom return node"))
-	bool bCustomReturn = false;
-
-	//Node to return in this dialogue if it was interrupted on this node
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", meta = (EditCondition = bCustomReturn, EditConditionHides))
-	FGuid NodeToReturnGUID;
-
-	UPROPERTY(VisibleAnywhere, Category = "Dialogue|Node", meta = (EditConditionHides))
-	int32 NodeToReturnIndex;
-
-
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node")
-	bool bCustomInterrupt = false;
-
-	//Cannot start another dialogue if not interruptible
-	UPROPERTY(EditAnywhere, Category = "Dialogue|Node", meta = (EditCondition = "bCustomInterrupt", EditConditionHides))
-	FNodeInterruptInfo InterruptInfo;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node")
-	FDialogueItem GivingItem;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node")
-	FDialogueItem RequestItem;
-
-
-	virtual void RemapOldIndicesWithNew(const TMap<int32, int32>& OldToNewIndexMap);
-
 
 protected:
 #if WITH_EDITORONLY_DATA
@@ -446,7 +327,6 @@ protected:
 	// Events fired when the node is reached in the dialogue
 	UPROPERTY(EditAnywhere, Category = "Dialogue|Node")
 	TArray<FDlgEvent> EnterEvents;
-
 
 	// The Unique identifier for each Node. This is much safer than a Node Index.
 	// Compile/Save Asset to generate this

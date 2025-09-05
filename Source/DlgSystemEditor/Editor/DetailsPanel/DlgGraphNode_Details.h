@@ -85,7 +85,6 @@ private:
 	TSharedPtr<FDlgObject_CustomRowHelper> NodeDataPropertyRow_CustomDisplay;
 	IDetailPropertyRow* VoiceSoundWavePropertyRow = nullptr;
 	IDetailPropertyRow* VoiceDialogueWavePropertyRow = nullptr;
-	IDetailPropertyRow* FmodEventPropertyRow = nullptr;
 	IDetailPropertyRow* GenericDataPropertyRow = nullptr;
 	IDetailPropertyRow* ChildrenPropertyRow = nullptr;
 

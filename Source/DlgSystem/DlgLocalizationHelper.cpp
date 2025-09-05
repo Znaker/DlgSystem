@@ -35,7 +35,7 @@ void FDlgLocalizationHelper::UpdateTextFromRemapping(const UDlgSystemSettings& S
 
 #if WITH_EDITOR
 
-void FDlgLocalizationHelper::UpdateTextNamespaceAndKey(const UObject* Object, const FName ParticipantName, const UDlgSystemSettings& Settings, FText& Text)
+void FDlgLocalizationHelper::UpdateTextNamespaceAndKey(const UObject* Object, const UDlgSystemSettings& Settings, FText& Text)
 {
 	static const FString DefaultValue = TEXT("");
 
@@ -48,7 +48,7 @@ void FDlgLocalizationHelper::UpdateTextNamespaceAndKey(const UObject* Object, co
 	// Text remapping takes precedence over everything
 	FString NewNamespace;
 	FString NewKey;
-	if (!GetNewNamespaceAndKey(Object, ParticipantName, Settings, Text, NewNamespace, NewKey))
+	if (!GetNewNamespaceAndKey(Object, Settings, Text, NewNamespace, NewKey))
 	{
 		return;
 	}
@@ -61,10 +61,10 @@ void FDlgLocalizationHelper::UpdateTextNamespaceAndKey(const UObject* Object, co
 
 bool FDlgLocalizationHelper::GetNewNamespaceAndKey(
 	const UObject* Object,
-	const FName ParticipantName,
 	const UDlgSystemSettings& Settings,
 	const FText& Text,
-	FString& OutNewNamespace, FString& OutNewKey
+	FString& OutNewNamespace,
+	FString& OutNewKey
 )
 {
 	static const FString DefaultValue = TEXT("");
@@ -98,10 +98,6 @@ bool FDlgLocalizationHelper::GetNewNamespaceAndKey(
 	else if (Settings.DialogueTextNamespaceLocalization == EDlgTextNamespaceLocalization::WithPrefixPerDialogue)
 	{
 		NewNamespace = Settings.DialogueTextPrefixNamespaceName + Object->GetName();
-	}
-	else if (Settings.DialogueTextNamespaceLocalization == EDlgTextNamespaceLocalization::WithPrefixPerParticipant)
-	{
-		NewNamespace = "DLG_"+ Object->GetName() + "_" + Settings.DialogueTextPrefixNamespaceName + ParticipantName.ToString();
 	}
 
 	// Did namespace change?

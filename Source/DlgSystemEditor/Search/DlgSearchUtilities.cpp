@@ -193,42 +193,6 @@ void FDlgSearchUtilities::GetGraphNodesForTextArgumentVariable(
 	}
 }
 
-void FDlgSearchUtilities::GetStartNodesForBranchTag(
-	FName VariableName,
-	const UDlgDialogue* Dialogue,
-	EDlgTextArgumentType ArgumentType,
-	TSharedPtr<FDlgSearchFoundResult>& FoundResult
-)
-{
-	const UDialogueGraph* Graph = CastChecked<UDialogueGraph>(Dialogue->GetGraph());
-	for (const UDialogueGraphNode_Base* GraphNodeBase : Graph->GetAllBaseDialogueGraphNodes())
-	{
-		if (const UDialogueGraphNode* GraphNode = Cast<UDialogueGraphNode>(GraphNodeBase))
-		{
-			// The root node does not have searchable info
-			if (GraphNode->IsRootNode())
-			{
-				continue;
-			}
-
-			// Node
-			const UDlgNode& Node = GraphNode->GetDialogueNode();
-			if (IsTextArgumentInArray(VariableName, ArgumentType, Node.GetTextArguments()))
-			{
-				FoundResult->GraphNodes.Add(GraphNode);
-			}
-		}
-		else if (const UDialogueGraphNode_Edge* EdgeNode = Cast<UDialogueGraphNode_Edge>(GraphNodeBase))
-		{
-			// Edge
-			if (IsTextArgumentInArray(VariableName, ArgumentType, EdgeNode->GetDialogueEdge().GetTextArguments()))
-			{
-				FoundResult->EdgeNodes.Add(EdgeNode);
-			}
-		}
-	}
-}
-
 bool FDlgSearchUtilities::DoesGUIDContainString(const FGuid& GUID, const FString& SearchString, FString& OutGUIDString)
 {
 	const FString GUIDToSearchFor = SearchString.TrimStartAndEnd();
