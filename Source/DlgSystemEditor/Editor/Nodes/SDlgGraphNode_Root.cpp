@@ -8,3 +8,8 @@ void SDlgGraphNode_Root::Construct(const FArguments& InArgs, UDialogueGraphNode_
 	Super::Construct(Super::FArguments(), InNode);
 	DialogueGraphNode_Root = InNode;
 }
+
+TSharedRef<SWidget> SDlgGraphNode_Root::GetNodeBodyWidget()
+{
+	return SDlgGraphNode::GetNodeBodyWidget();
+}

@@ -278,4 +278,11 @@ private:
 		EDlgTextArgumentType ArgumentType,
 		TSharedPtr<FDlgSearchFoundResult>& FoundResult
 	);
+
+	static void GetStartNodesForBranchTag(
+			FName VariableName,
+			const UDlgDialogue* Dialogue,
+			EDlgTextArgumentType ArgumentType,
+			TSharedPtr<FDlgSearchFoundResult>& FoundResult
+		);
 };

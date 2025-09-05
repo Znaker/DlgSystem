@@ -488,11 +488,7 @@ TSharedRef<SGraphEditor> FDlgEditor::CreateGraphEditorWidget()
 	SGraphEditor::FGraphEditorEvents InEvents;
 	InEvents.OnTextCommitted = FOnNodeTextCommitted::CreateSP(this, &FDlgEditor::OnNodeTitleCommitted);
 	InEvents.OnSelectionChanged = SGraphEditor::FOnSelectionChanged::CreateSP(this, &FDlgEditor::OnSelectedNodesChanged);
-#if NY_ENGINE_VERSION >= 506
-	InEvents.OnCreateActionMenuAtLocation = SGraphEditor::FOnCreateActionMenuAtLocation::CreateSP(this, &FDlgEditor::OnCreateGraphActionMenu);
-#else
 	InEvents.OnCreateActionMenu = SGraphEditor::FOnCreateActionMenu::CreateSP(this, &FDlgEditor::OnCreateGraphActionMenu);
-#endif
 
 	return SNew(SGraphEditor)
 		.AdditionalCommands(GraphEditorCommands)
@@ -519,12 +515,7 @@ void FDlgEditor::BindEditorCommands()
 		FExecuteAction::CreateLambda([this]
 		{
 			FDlgNewComment_GraphSchemaAction CommentAction;
-#if NY_ENGINE_VERSION >= 506
-			FVector2f PasteLocation = GraphEditorView->GetPasteLocation2f();
-#else
-			FVector2D PasteLocation = GraphEditorView->GetPasteLocation();
-#endif
-			CommentAction.PerformAction(DialogueBeingEdited->GetGraph(), nullptr, PasteLocation);
+			CommentAction.PerformAction(DialogueBeingEdited->GetGraph(), nullptr, GraphEditorView->GetPasteLocation());
 		})
 	);
 
@@ -1131,15 +1122,10 @@ bool FDlgEditor::CanCopyNodes() const
 
 void FDlgEditor::OnCommandPasteNodes()
 {
-#if NY_ENGINE_VERSION >= 506
-	FVector2f PasteLocation = GraphEditorView->GetPasteLocation2f();
-#else
-	FVector2D PasteLocation = GraphEditorView->GetPasteLocation();
-#endif
-	PasteNodesHere(PasteLocation);
+	PasteNodesHere(GraphEditorView->GetPasteLocation());
 }
 
-void FDlgEditor::PasteNodesHere(const FNYVector2f& Location)
+void FDlgEditor::PasteNodesHere(const FVector2D& Location)
 {
 	// Undo/Redo support
 	const FScopedTransaction Transaction(FGenericCommands::Get().Paste->GetDescription());
@@ -1163,7 +1149,7 @@ void FDlgEditor::PasteNodesHere(const FNYVector2f& Location)
 
 	// Step 1. Calculate average position
 	// Average position of nodes so we can move them while still maintaining relative distances to each other
-	FVector2f AvgNodePosition(0.0f, 0.0f);
+	FVector2D AvgNodePosition(0.0f, 0.0f);
 	for (UEdGraphNode* Node : PastedNodes)
 	{
 		AvgNodePosition.X += Node->NodePosX;
@@ -1376,7 +1362,7 @@ void FDlgEditor::OnSelectedNodesChanged(const TSet<UObject*>& NewSelection)
 
 FActionMenuContent FDlgEditor::OnCreateGraphActionMenu(
 	UEdGraph* InGraph,
-	const FNYVector2f& InNodePosition,
+	const FVector2D& InNodePosition,
 	const TArray<UEdGraphPin*>& InDraggedPins,
 	bool bAutoExpand,
 	SGraphEditor::FActionMenuClosed InOnMenuClosed

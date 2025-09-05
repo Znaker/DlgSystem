@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FDlgConvertSpeechNodesToSpeechSequence_GraphSchemaAction
 UEdGraphNode* FDlgConvertSpeechNodesToSpeechSequence_GraphSchemaAction::PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin,
-	FNYLocationVector2f Location, bool bSelectNewNode/* = true*/)
+	const FVector2D Location, bool bSelectNewNode/* = true*/)
 {
 	// Should have been stopped in GetConvertActions
 	check(SelectedGraphNodes.Num() > 0);
@@ -43,6 +43,7 @@ UEdGraphNode* FDlgConvertSpeechNodesToSpeechSequence_GraphSchemaAction::PerformA
 		SequenceEntry.SpeakerState = DialogueNode_Speech.GetSpeakerState();
 		SequenceEntry.VoiceSoundWave = DialogueNode_Speech.GetNodeVoiceSoundBase();
 		SequenceEntry.VoiceDialogueWave = DialogueNode_Speech.GetNodeVoiceDialogueWave();
+		SequenceEntry.FMODEvent = DialogueNode_Speech.GetNodeFMODEvent();
 		SequenceEntry.GenericData = DialogueNode_Speech.GetNodeGenericData();
 
 		// Set edge if any

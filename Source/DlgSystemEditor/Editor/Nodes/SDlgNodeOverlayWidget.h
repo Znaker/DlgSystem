@@ -26,13 +26,13 @@ public:
 
 	void Construct(const FArguments& InArgs);
 
-	virtual void OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
+	void OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override
 	{
 		OnHoverStateChangedEvent.ExecuteIfBound(true);
 		SCompoundWidget::OnMouseEnter(MyGeometry, MouseEvent);
 	}
 
-	virtual void OnMouseLeave(const FPointerEvent& MouseEvent) override
+	void OnMouseLeave(const FPointerEvent& MouseEvent) override
 	{
 		OnHoverStateChangedEvent.ExecuteIfBound(false);
 		SCompoundWidget::OnMouseLeave(MouseEvent);

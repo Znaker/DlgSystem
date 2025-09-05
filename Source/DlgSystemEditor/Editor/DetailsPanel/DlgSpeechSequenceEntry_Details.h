@@ -85,6 +85,7 @@ private:
 	TSharedPtr<FDlgTextPropertyPickList_CustomRowHelper> SpeakerStatePropertyRow;
 	IDetailPropertyRow* VoiceSoundWavePropertyRow = nullptr;
 	IDetailPropertyRow* VoiceDialogueWavePropertyRow = nullptr;
+	IDetailPropertyRow* FmodEventPropertyRow = nullptr;
 	IDetailPropertyRow* GenericDataPropertyRow = nullptr;
 	IDetailPropertyRow* NodeDataPropertyRow = nullptr;
 	TSharedPtr<FDlgMultiLineEditableTextBox_CustomRowHelper> TextPropertyRow;

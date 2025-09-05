@@ -88,18 +88,18 @@ void FDlgGraphConnectionDrawingPolicy::DrawSplineWithArrow(
 {
 	// Draw the spline and arrow from/to the closest points between the two geometries (nodes)
 	// Get a reasonable seed point (halfway between the boxes)
-	const FNYVector2f StartCenter = FGeometryHelper::CenterOf(StartGeom);
-	const FNYVector2f EndCenter = FGeometryHelper::CenterOf(EndGeom);
-	const FNYVector2f SeedPoint = (StartCenter + EndCenter) / 2.0f;
+	const FVector2D StartCenter = FGeometryHelper::CenterOf(StartGeom);
+	const FVector2D EndCenter = FGeometryHelper::CenterOf(EndGeom);
+	const FVector2D SeedPoint = (StartCenter + EndCenter) / 2.0f;
 
 	// Find the (approximate) closest points between the two boxes
-	const FNYVector2f StartAnchorPoint = FGeometryHelper::FindClosestPointOnGeom(StartGeom, SeedPoint);
-	const FNYVector2f EndAnchorPoint = FGeometryHelper::FindClosestPointOnGeom(EndGeom, SeedPoint);
+	const FVector2D StartAnchorPoint = FGeometryHelper::FindClosestPointOnGeom(StartGeom, SeedPoint);
+	const FVector2D EndAnchorPoint = FGeometryHelper::FindClosestPointOnGeom(EndGeom, SeedPoint);
 
 	DrawSplineWithArrow(StartAnchorPoint, EndAnchorPoint, Params);
 }
 
-void FDlgGraphConnectionDrawingPolicy::DrawSplineWithArrow(const FNYVector2f& StartPoint, const FNYVector2f& EndPoint,
+void FDlgGraphConnectionDrawingPolicy::DrawSplineWithArrow(const FVector2D& StartPoint, const FVector2D& EndPoint,
 	const FConnectionParams& Params)
 {
 	Internal_DrawLineWithArrow(StartPoint, EndPoint, Params);
@@ -112,18 +112,18 @@ void FDlgGraphConnectionDrawingPolicy::DrawSplineWithArrow(const FNYVector2f& St
 
 void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 	int32 LayerId,
-	const FNYVector2f& Start,
-	const FNYVector2f& End,
+	const FVector2D& Start,
+	const FVector2D& End,
 	const FConnectionParams& Params
 )
 {
 	// Code mostly from Super::DrawConnection
-	const FNYVector2f& P0 = Start;
-	const FNYVector2f& P1 = End;
+	const FVector2D& P0 = Start;
+	const FVector2D& P1 = End;
 
-	const FNYVector2f SplineTangent = ComputeSplineTangent(P0, P1);
-	const FNYVector2f P0Tangent = Params.StartDirection == EGPD_Output ? SplineTangent : -SplineTangent;
-	const FNYVector2f P1Tangent = Params.EndDirection == EGPD_Input ? SplineTangent : -SplineTangent;
+	const FVector2D SplineTangent = ComputeSplineTangent(P0, P1);
+	const FVector2D P0Tangent = Params.StartDirection == EGPD_Output ? SplineTangent : -SplineTangent;
+	const FVector2D P1Tangent = Params.EndDirection == EGPD_Input ? SplineTangent : -SplineTangent;
 
 	if (Settings->bTreatSplinesLikePins)
 	{
@@ -144,12 +144,12 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 			// The curve will include the endpoints but can extend out of a tight bounds because of the tangents
 			// P0Tangent coefficient maximizes to 4/27 at a=1/3, and P1Tangent minimizes to -4/27 at a=2/3.
 			constexpr float MaximumTangentContribution = 4.0f / 27.0f;
-			FNYBox2f Bounds(ForceInit);
+			FBox2D Bounds(ForceInit);
 
-			Bounds += FNYVector2f(P0);
-			Bounds += FNYVector2f(P0 + MaximumTangentContribution * P0Tangent);
-			Bounds += FNYVector2f(P1);
-			Bounds += FNYVector2f(P1 - MaximumTangentContribution * P1Tangent);
+			Bounds += FVector2D(P0);
+			Bounds += FVector2D(P0 + MaximumTangentContribution * P0Tangent);
+			Bounds += FVector2D(P1);
+			Bounds += FVector2D(P1 - MaximumTangentContribution * P1Tangent);
 
 #if NY_ENGINE_VERSION >= 500
 			bCloseToSpline = Bounds.ComputeSquaredDistanceToPoint(LocalMousePosition) < QueryDistanceForCloseSquared;
@@ -161,19 +161,18 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 		if (bCloseToSpline)
 		{
 			// Find the closest approach to the spline
-			FNYVector2f ClosestPoint(ForceInit);
+			FVector2D ClosestPoint(ForceInit);
 			float ClosestDistanceSquared = FLT_MAX;
 
 			constexpr int32 NumStepsToTest = 16;
 			constexpr float StepInterval = 1.0f / static_cast<float>(NumStepsToTest);
-			FNYVector2f Point1 = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, 0.0f);
+			FVector2D Point1 = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, 0.0f);
 			for (float TestAlpha = 0.0f; TestAlpha < 1.0f; TestAlpha += StepInterval)
 			{
-				const FNYVector2f Point2 = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, TestAlpha + StepInterval);
+				const FVector2D Point2 = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, TestAlpha + StepInterval);
 
-				const FNYVector2f LocalMousePosition2D(LocalMousePosition.X, LocalMousePosition.Y);
-				const FNYVector2f ClosestPointToSegment = FMath::ClosestPointOnSegment2D(LocalMousePosition2D, Point1, Point2);
-				const float DistanceSquared = (LocalMousePosition2D - ClosestPointToSegment).SizeSquared();
+				const FVector2D ClosestPointToSegment = FMath::ClosestPointOnSegment2D(LocalMousePosition, Point1, Point2);
+				const float DistanceSquared = (LocalMousePosition - ClosestPointToSegment).SizeSquared();
 
 				if (DistanceSquared < ClosestDistanceSquared)
 				{
@@ -251,7 +250,7 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 		{
 			const float BubbleSpacing = 64.f * ZoomFactor;
 			const float BubbleSpeed = 192.f * ZoomFactor;
-			const FNYVector2f BubbleSize = BubbleImage->ImageSize * ZoomFactor * 0.1f * Params.WireThickness;
+			const FVector2D BubbleSize = BubbleImage->ImageSize * ZoomFactor * 0.1f * Params.WireThickness;
 
 			const float Time = FPlatformTime::Seconds() - GStartTime;
 			const float BubbleOffset = FMath::Fmod(Time * BubbleSpeed, BubbleSpacing);
@@ -262,7 +261,7 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 				if (Distance < SplineLength)
 				{
 					const float Alpha = SplineReparamTable.Eval(Distance, 0.f);
-					FNYVector2f BubblePos = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, Alpha);
+					FVector2D BubblePos = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, Alpha);
 					BubblePos -= (BubbleSize * 0.5f);
 
 					FSlateDrawElement::MakeBox(
@@ -282,15 +281,15 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 		{
 			// Determine the spline position for the midpoint
 			const float MidpointAlpha = SplineReparamTable.Eval(SplineLength * 0.5f, 0.f);
-			const FNYVector2f Midpoint = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, MidpointAlpha);
+			const FVector2D Midpoint = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, MidpointAlpha);
 
 			// Approximate the slope at the midpoint (to orient the midpoint image to the spline)
-			const FNYVector2f MidpointPlusE = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, MidpointAlpha + KINDA_SMALL_NUMBER);
-			const FNYVector2f MidpointMinusE = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, MidpointAlpha - KINDA_SMALL_NUMBER);
-			const FNYVector2f SlopeUnnormalized = MidpointPlusE - MidpointMinusE;
+			const FVector2D MidpointPlusE = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, MidpointAlpha + KINDA_SMALL_NUMBER);
+			const FVector2D MidpointMinusE = FMath::CubicInterp(P0, P0Tangent, P1, P1Tangent, MidpointAlpha - KINDA_SMALL_NUMBER);
+			const FVector2D SlopeUnnormalized = MidpointPlusE - MidpointMinusE;
 
 			// Draw the arrow
-			const FNYVector2f MidpointDrawPos = Midpoint - MidpointRadius;
+			const FVector2D MidpointDrawPos = Midpoint - MidpointRadius;
 			const float AngleInRadians = SlopeUnnormalized.IsNearlyZero() ? 0.0f : FMath::Atan2(SlopeUnnormalized.Y, SlopeUnnormalized.X);
 
 			FSlateDrawElement::MakeRotatedBox(
@@ -300,7 +299,7 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 				MidpointImage,
 				ESlateDrawEffect::None,
 				AngleInRadians,
-				TOptional<FNYVector2f>(),
+				TOptional<FVector2D>(),
 				FSlateDrawElement::RelativeToElement,
 				Params.WireColor
 			);
@@ -310,8 +309,8 @@ void FDlgGraphConnectionDrawingPolicy::DrawConnection(
 
 void FDlgGraphConnectionDrawingPolicy::DrawPreviewConnector(
 	const FGeometry& PinGeometry,
-	const FNYVector2f& StartPoint,
-	const FNYVector2f& EndPoint,
+	const FVector2D& StartPoint,
+	const FVector2D& EndPoint,
 	UEdGraphPin* Pin
 )
 {
@@ -331,11 +330,11 @@ void FDlgGraphConnectionDrawingPolicy::DrawPreviewConnector(
 	}
 }
 
-FNYVector2f FDlgGraphConnectionDrawingPolicy::ComputeSplineTangent(const FNYVector2f& Start, const FNYVector2f& End) const
+FVector2D FDlgGraphConnectionDrawingPolicy::ComputeSplineTangent(const FVector2D& Start, const FVector2D& End) const
 {
 	// Draw a straight line
-	const FNYVector2f Delta = End - Start;
-	const FNYVector2f NormDelta = Delta.GetSafeNormal();
+	const FVector2D Delta = End - Start;
+	const FVector2D NormDelta = Delta.GetSafeNormal();
 	return NormDelta;
 }
 
@@ -356,21 +355,22 @@ void FDlgGraphConnectionDrawingPolicy::Draw(TMap<TSharedRef<SWidget>, FArrangedW
 }
 
 void FDlgGraphConnectionDrawingPolicy::Internal_DrawLineWithArrow(
-	const FNYVector2f& StartAnchorPoint,
-	const FNYVector2f& EndAnchorPoint,
-	const FConnectionParams& Params)
+	const FVector2D& StartAnchorPoint,
+	const FVector2D& EndAnchorPoint,
+	const FConnectionParams& Params
+)
 {
 	constexpr float LineSeparationAmount = 4.5f;
 
-	const FNYVector2f DeltaPos = EndAnchorPoint - StartAnchorPoint;
-	const FNYVector2f UnitDelta = DeltaPos.GetSafeNormal();
-	const FNYVector2f Normal = FNYVector2f(DeltaPos.Y, -DeltaPos.X).GetSafeNormal();
+	const FVector2D DeltaPos = EndAnchorPoint - StartAnchorPoint;
+	const FVector2D UnitDelta = DeltaPos.GetSafeNormal();
+	const FVector2D Normal = FVector2D(DeltaPos.Y, -DeltaPos.X).GetSafeNormal();
 
 	// Come up with the final start/end points
-	const FNYVector2f DirectionBias = Normal * LineSeparationAmount;
-	const FNYVector2f LengthBias = ArrowRadius.X * UnitDelta;
-	const FNYVector2f StartPoint = StartAnchorPoint + DirectionBias + LengthBias;
-	const FNYVector2f EndPoint = EndAnchorPoint + DirectionBias - LengthBias;
+	const FVector2D DirectionBias = Normal * LineSeparationAmount;
+	const FVector2D LengthBias = ArrowRadius.X * UnitDelta;
+	const FVector2D StartPoint = StartAnchorPoint + DirectionBias + LengthBias;
+	const FVector2D EndPoint = EndAnchorPoint + DirectionBias - LengthBias;
 
 	// Draw a line/spline
 	DrawConnection(WireLayerID, StartPoint, EndPoint, Params);
@@ -378,7 +378,7 @@ void FDlgGraphConnectionDrawingPolicy::Internal_DrawLineWithArrow(
 	// Draw the arrow
 	if (ArrowImage)
 	{
-		const FNYVector2f ArrowDrawPos = EndPoint - ArrowRadius;
+		const FVector2D ArrowDrawPos = EndPoint - ArrowRadius;
 		const float AngleInRadians = FMath::Atan2(DeltaPos.Y, DeltaPos.X);
 
 		FSlateDrawElement::MakeRotatedBox(
@@ -388,7 +388,7 @@ void FDlgGraphConnectionDrawingPolicy::Internal_DrawLineWithArrow(
 			ArrowImage,
 			ESlateDrawEffect::None,
 			AngleInRadians,
-			TOptional<FNYVector2f>(),
+			TOptional<FVector2D>(),
 			FSlateDrawElement::RelativeToElement,
 			Params.WireColor
 		);

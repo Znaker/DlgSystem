@@ -38,6 +38,13 @@ const FName FDlgStyle::PROPERTY_VoiceIcon(TEXT("DlgSystemEditor.Voice"));
 const FName FDlgStyle::PROPERTY_GenericIcon(TEXT("DlgSystemEditor.Generic"));
 const FName FDlgStyle::PROPERTY_QuestionMarkIcon(TEXT("DlgSystemEditor.QuestionMark"));
 
+//by Pecka
+const FName FDlgStyle::PROPERTY_RequestItemIcon(TEXT("DlgSystemEditor.Graph.Node.RequestItem"));
+const FName FDlgStyle::PROPERTY_GivingItemIcon(TEXT("DlgSystemEditor.Graph.Node.GivingItem"));
+const FName FDlgStyle::PROPERTY_InterruptIcon(TEXT("DlgSystemEditor.Graph.Node.Interrupt"));
+const FName FDlgStyle::PROPERTY_StateIcon(TEXT("DlgSystemEditor.Graph.Node.State"));
+const FName FDlgStyle::PROPERTY_ReturnIcon(TEXT("DlgSystemEditor.Graph.Node.Return"));
+
 // Tied with FDlgCommands::DialogueReloadData
 const FName FDlgStyle::PROPERTY_ReloadAssetIcon(TEXT("DlgSystemEditor.DialogueReloadData"));
 
@@ -328,6 +335,28 @@ void FDlgStyle::Initialize()
 			Icon16x16,
 			FLinearColor(1.f, 1.f, 1.f, 1.f)
 		)
+	);
+
+	//by Pecka
+	StyleSet->Set(
+		PROPERTY_RequestItemIcon,
+		new FSlateImageBrush(GetPluginContentPath("Icons/RequestItemCondition.png"), Icon96x96)
+	);
+	StyleSet->Set(
+		PROPERTY_GivingItemIcon,
+		new FSlateImageBrush(GetPluginContentPath("Icons/GivingItem2Condition.png"), Icon96x96)
+	);
+	StyleSet->Set(
+		PROPERTY_InterruptIcon,
+		new FSlateImageBrush(GetPluginContentPath("Icons/Interrapt2Condition.png"), Icon96x96)
+	);
+	StyleSet->Set(
+		PROPERTY_StateIcon,
+		new FSlateImageBrush(GetPluginContentPath("Icons/StateCondition.png"), Icon96x96)
+	);
+	StyleSet->Set(
+		PROPERTY_ReturnIcon,
+		new FSlateImageBrush(GetPluginContentPath("Icons/ReturnCondition.png"), Icon96x96)
 	);
 
 	// Register the current style

@@ -102,6 +102,20 @@ void FDlgEdge_Details::CustomizeChildren(TSharedRef<IPropertyHandle> InStructPro
 	IDetailPropertyRow& BoolPropertyRow = StructBuilder.AddProperty(StructPropertyHandle->GetChildHandle(
 		GET_MEMBER_NAME_CHECKED(FDlgEdge, bIncludeInAllOptionListIfUnsatisfied)).ToSharedRef()
 	);
+
+	IDetailPropertyRow& BoolPropertyRow2 = StructBuilder.AddProperty(StructPropertyHandle->GetChildHandle(
+        GET_MEMBER_NAME_CHECKED(FDlgEdge, bHiddenOption)).ToSharedRef()
+    );
+
+	IDetailPropertyRow& UStructPropertyRow = StructBuilder.AddProperty(StructPropertyHandle->GetChildHandle(
+		GET_MEMBER_NAME_CHECKED(FDlgEdge, EdgeIntend)).ToSharedRef()
+	);
+
+	IDetailPropertyRow& UStructPropertyRow2 = StructBuilder.AddProperty(StructPropertyHandle->GetChildHandle(
+		GET_MEMBER_NAME_CHECKED(FDlgEdge, AnyControlledIntends)).ToSharedRef()
+	);
+
+
 	BoolPropertyRow.Visibility(CREATE_VISIBILITY_CALLBACK(&Self::GetTextVisibility));
 
 	// Node Data that can be anything set by the user

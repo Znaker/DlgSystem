@@ -46,6 +46,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (DlgSaveOnlyReference))
 	UDialogueWave* VoiceDialogueWave = nullptr;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (DlgSaveOnlyReference))
+	UFMODEvent* FMODEvent = nullptr;
+
 	// Any generic object you would like
 	// NOTE: You should probably use the NodeData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Node", Meta = (DlgSaveOnlyReference))
@@ -85,6 +89,7 @@ public:
 	UDlgNodeData* GetNodeData() const override;
 	USoundBase* GetNodeVoiceSoundBase() const override;
 	UDialogueWave* GetNodeVoiceDialogueWave() const override;
+	UFMODEvent* GetNodeFMODEvent() const override;
 	FName GetSpeakerState() const override;
 	void AddAllSpeakerStatesIntoSet(TSet<FName>& OutStates) const override;
 	UObject* GetNodeGenericData() const override;

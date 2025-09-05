@@ -10,13 +10,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FDlgNewComment_GraphSchemaAction
 UEdGraphNode* FDlgNewComment_GraphSchemaAction::PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin,
-	FNYLocationVector2f Location, bool bSelectNewNode/* = true*/)
+	const FVector2D Location, bool bSelectNewNode/* = true*/)
 {
 	// Add menu item for creating comment boxes
 	UEdGraphNode_Comment* CommentTemplate = NewObject<UEdGraphNode_Comment>();
 
 	// Wrap comment around other nodes, this makes it possible to select other nodes and press the "C" key on the keyboard.
-	FNYVector2f SpawnLocation = Location;
+	FVector2D SpawnLocation = Location;
 	FSlateRect Bounds;
 	if (FDlgEditorUtilities::GetBoundsForSelectedNodes(ParentGraph, Bounds, 50.0f))
 	{

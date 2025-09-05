@@ -86,7 +86,7 @@ UDlgContext* UDlgManager::StartDialogueWithDefaultParticipants(UObject* WorldCon
 	{
 		const FString NameList = FString::Join(DuplicatedNames, TEXT(", "));
 		FDlgLogger::Get().Errorf(
-			TEXT("StartDialogueWithDefaultParticipants - FAILED for Dialogue = `%s`, the system found multiple participants using the same name: %s"),
+			TEXT("Tall StartDialogueWithDefaultParticipants - FAILED for Dialogue = `%s`, the system found multiple participants using the same name: %s"),
 			*Dialogue->GetName(), *NameList
 		);
 	}
@@ -98,6 +98,7 @@ UDlgContext* UDlgManager::StartDialogueWithDefaultParticipants(UObject* WorldCon
 
 	return StartDialogueWithContext(TEXT("StartDialogueWithDefaultParticipants"), Dialogue, Participants);
 }
+
 
 UDlgContext* UDlgManager::StartDialogueWithContext(const FString& ContextString, UDlgDialogue* Dialogue, const TArray<UObject*>& Participants)
 {
@@ -431,18 +432,17 @@ bool UDlgManager::IsObjectANodeData(const UObject* Object)
 	return FDlgHelper::IsObjectAChildOf(Object, UDlgNodeData::StaticClass());
 }
 
-TArray<UDlgDialogue*> UDlgManager::GetAllDialoguesForParticipantName(FName ParticipantName)
+bool UDlgManager::GetAllDialoguesForParticipantName(FName ParticipantName, TArray<UDlgDialogue*>& OutArray)
 {
-	TArray<UDlgDialogue*> DialoguesArray;
 	for (UDlgDialogue* Dialogue : GetAllDialoguesFromMemory())
 	{
 		if (Dialogue->HasParticipant(ParticipantName))
 		{
-			DialoguesArray.Add(Dialogue);
+			OutArray.Add(Dialogue);
 		}
 	}
 
-	return DialoguesArray;
+	return OutArray.Num() > 0;
 }
 
 TArray<FName> UDlgManager::GetDialoguesParticipantNames()

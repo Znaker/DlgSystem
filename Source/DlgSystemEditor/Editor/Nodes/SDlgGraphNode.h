@@ -27,23 +27,23 @@ public:
 	void Construct(const FArguments& InArgs, UDialogueGraphNode* InNode);
 
 	// Begin SWidget interface
-	virtual void OnDragEnter(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override
+	void OnDragEnter(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override
 	{
 		Super::OnDragEnter(MyGeometry, DragDropEvent);
 	}
-	virtual void OnDragLeave(const FDragDropEvent& DragDropEvent) override
+	void OnDragLeave(const FDragDropEvent& DragDropEvent) override
 	{
 		Super::OnDragLeave(DragDropEvent);
 	}
 
-	virtual FReply OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override
+	FReply OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override
 	{
 		return Super::OnDragOver(MyGeometry, DragDropEvent);
 	}
-	virtual FReply OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
+	FReply OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
 
-	virtual FReply OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual FReply OnMouseMove(const FGeometry& SenderGeometry, const FPointerEvent& MouseEvent) override
+	FReply OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, const FPointerEvent& InMouseEvent) override;
+	FReply OnMouseMove(const FGeometry& SenderGeometry, const FPointerEvent& MouseEvent) override
 	{
 		return Super::OnMouseMove(SenderGeometry, MouseEvent);
 	}
@@ -52,19 +52,20 @@ public:
 	// Begin SNodePanel::SNode Interface
 
 	/** Populate the widgets array with any overlay widgets to render */
-	virtual TArray<FOverlayWidgetInfo> GetOverlayWidgets(bool bSelected, const FNYVector2f& WidgetSize) const override;
+	TArray<FOverlayWidgetInfo> GetOverlayWidgets(bool bSelected, const FVector2D& WidgetSize) const override;
 
 	/** Populate the brushes array with any overlay brushes to render */
+	void GetOverlayBrushes(bool bSelected, const FVector2D WidgetSize, TArray<FOverlayBrushInfo>& Brushes) const override;
 	// End SNodePanel::SNode Interface
 
 	// Begin SGraphNode Interface
 
 	/** Update this GraphNode to match the data that it is observing */
-	virtual void UpdateGraphNode() override;
+	void UpdateGraphNode() override;
 	// End SGraphNode Interface
 
 	// Begin SDlgGraphNode_Base Interface
-	virtual EVisibility GetNodeVisibility() const override
+	EVisibility GetNodeVisibility() const override
 	{
 		return DialogueGraphNode && DialogueGraphNode->ShouldDrawNode() ? EVisibility::Visible : EVisibility::Hidden;
 	}
@@ -80,10 +81,10 @@ protected:
 	//
 
 	/** Override this to provide support for an 'expensive' tooltip widget that is only built on demand */
-	virtual TSharedPtr<SToolTip> GetComplexTooltip() override { return Super::GetComplexTooltip(); }
+	TSharedPtr<SToolTip> GetComplexTooltip() override { return Super::GetComplexTooltip(); }
 
 	/** Should we use low-detail node titles? Used by UpdateGraphNode() */
-	virtual bool UseLowDetailNodeTitles() const override
+	bool UseLowDetailNodeTitles() const override
 	{
 		if (const SGraphPanel* MyOwnerPanel = GetOwnerPanel().Get())
 		{
@@ -94,17 +95,17 @@ protected:
 	}
 
 	/** Return the desired comment bubble color */
-	virtual FSlateColor GetCommentColor() const override { return DialogueGraphNode->GetNodeBackgroundColor(); }
+	FSlateColor GetCommentColor() const override { return DialogueGraphNode->GetNodeBackgroundColor(); }
 
 	/* Populate a meta data tag with information about this graph node. sed by UpdateGraphNode() */
-	virtual void PopulateMetaTag(class FGraphNodeMetaData* TagMeta) const override { Super::PopulateMetaTag(TagMeta); }
+	void PopulateMetaTag(class FGraphNodeMetaData* TagMeta) const override { Super::PopulateMetaTag(TagMeta); }
 
 	//
 	// Begin own functions
 	//
 
 	/** Gets/Creates the inner node content area. Used by UpdateGraphNode() */
-	TSharedRef<SWidget> GetNodeBodyWidget();
+	virtual TSharedRef<SWidget> GetNodeBodyWidget();
 
 	/** Gets the actual title widget to display */
 	TSharedRef<SWidget> GetTitleWidget();
@@ -172,6 +173,15 @@ protected:
 	/** Gets the tooltip for the voice overlay. */
 	FText GetGenericOverlayTooltipText() const;
 
+	//by Pecka
+	FText ConditionIconToolTip = FText();
+
+	FText GetRequestItemOverlayTooltipText() const;
+	FText GetGivingItemOverlayTooltipText() const;
+	FText GetCustomInterruptOverlayTooltipText() const;
+	FText GetChangingNPCStateOverlayTooltipText() const;
+	FText GetCustomReturnOverlayTooltipText() const;
+
 	/** Get the visibility of the overlay widgets. */
 	EVisibility GetOverlayWidgetVisibility() const;
 
@@ -208,9 +218,24 @@ protected:
 	/** The widget we use to display if the node has any enter events */
 	TSharedPtr<SWidget> EventOverlayWidget;
 
+	/** The widget we use to display if the node has next speech timer for monologues */
+	TSharedPtr<SWidget> TimerOverlayWidget;
+
 	/** The widget we use to display if the node has voice/sound variables set */
 	TSharedPtr<SWidget> VoiceOverlayWidget;
 
 	/** The widget we use to display if the node has the GenericData variable set */
 	TSharedPtr<SWidget> GenericOverlayWidget;
+	/** The widget we use to display if the node has the GenericData variable set */
+
+	//by Pecka
+	TSharedPtr<SWidget> RequestItemWidget;
+	/** The widget we use to display if the node has the GenericData variable set */
+	TSharedPtr<SWidget> GivingItemWidget;
+	/** The widget we use to display if the node has the GenericData variable set */
+	TSharedPtr<SWidget> InterruptWidget;
+	/** The widget we use to display if the node has the GenericData variable set */
+	TSharedPtr<SWidget> StateWidget;
+	/** The widget we use to display if the node has the GenericData variable set */
+	TSharedPtr<SWidget> ReturnWidget;
 };

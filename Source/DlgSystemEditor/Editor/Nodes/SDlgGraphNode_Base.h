@@ -27,16 +27,16 @@ public:
 
 	// Begin SGraphNode Interface
 	/** Create the widgets for pins on the node */
-	virtual void CreatePinWidgets() override;
+	void CreatePinWidgets() override;
 
 	/** Create a single pin widget */
-	virtual void CreateStandardPinWidget(UEdGraphPin* Pin) override;
+	void CreateStandardPinWidget(UEdGraphPin* Pin) override;
 
 	/** Update this GraphNode to match the data that it is observing */
-	virtual void UpdateGraphNode() override;
+	void UpdateGraphNode() override;
 
 	/** @param OwnerPanel  The GraphPanel that this node belongs to */
-	virtual void SetOwner(const TSharedRef<SGraphPanel>& OwnerPanel) override;
+	void SetOwner(const TSharedRef<SGraphPanel>& OwnerPanel) override;
 	// End SGraphNode Interface
 
 	// Begin own methods
@@ -53,10 +53,10 @@ protected:
 	 *
 	 * @param PinToAdd   A new pin to add to this GraphNode.
 	 */
-	virtual void AddPin(const TSharedRef<SGraphPin>& PinToAdd) override;
+	void AddPin(const TSharedRef<SGraphPin>& PinToAdd) override;
 
 	/** Hook that allows derived classes to supply their own SGraphPin derivatives for any pin. Used by CreateStandardPinWidget. */
-	virtual TSharedPtr<SGraphPin> CreatePinWidget(UEdGraphPin* Pin) const override;
+	TSharedPtr<SGraphPin> CreatePinWidget(UEdGraphPin* Pin) const override;
 
 	/** Creates a vertical box containing the graph visualization data for events/conditions */
 	void CreateEventAndConditionWidgets(TSharedPtr<SVerticalBox> TargetWidget);

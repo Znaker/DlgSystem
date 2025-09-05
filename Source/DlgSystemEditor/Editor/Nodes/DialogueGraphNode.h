@@ -13,6 +13,7 @@
 #include "DlgSystem/Nodes/DlgNode_SpeechSequence.h"
 #include "DialogueGraphNode_Base.h"
 #include "DlgSystem/NYEngineVersionHelpers.h"
+#include "DlgSystem/Nodes/DlgNode_Start.h"
 
 #include "DialogueGraphNode.generated.h"
 
@@ -73,27 +74,27 @@ public:
 	 * Do any object-specific cleanup required immediately after loading an object,
 	 * and immediately after any undo/redo.
 	 */
-	virtual void PostLoad() override;
+	void PostLoad() override;
 
 	/**
 	 * Called after importing property values for this object (paste, duplicate or .t3d import)
 	 * Allow the object to perform any cleanup for properties which shouldn't be duplicated or
 	 * are unsupported by the script serialization
 	 */
-	virtual void PostEditImport() override;
+	void PostEditImport() override;
 
 	/**
 	 * Called when a property on this object has been modified externally
 	 *
 	 * @param PropertyChangedEvent the property that was modified
 	 */
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
 	/**
 	 * This alternate version of PostEditChange is called when properties inside structs are modified.  The property that was actually modified
 	 * is located at the tail of the list.  The head of the list of the FStructProperty member variable that contains the property that was modified.
 	 */
-	virtual void PostEditChangeChainProperty(struct FPropertyChangedChainEvent& PropertyChangedEvent) override;
+	void PostEditChangeChainProperty(struct FPropertyChangedChainEvent& PropertyChangedEvent) override;
 
 	/**
 	 * Note that the object will be modified.  If we are currently recording into the
@@ -104,24 +105,24 @@ public:
 	 *								currently recording an active undo/redo transaction
 	 * @return true if the object was saved to the transaction buffer
 	 */
-	virtual bool Modify(bool bAlwaysMarkDirty = true) override;
+	bool Modify(bool bAlwaysMarkDirty = true) override;
 
 	//
 	// Begin UEdGraphNode interface
 	//
 
 	/** Gets the name of this node, shown in title bar */
-	virtual FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
+	FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
 
 	/** Gets the tooltip to display when over the node */
-	virtual FText GetTooltipText() const override;
-	virtual FString GetDocumentationExcerptName() const override;
+	FText GetTooltipText() const override;
+	FString GetDocumentationExcerptName() const override;
 
 	/** Whether or not this node can be safely duplicated (via copy/paste, etc...) in the graph. */
-	virtual bool CanDuplicateNode() const override { return !IsRootNode(); }
+	bool CanDuplicateNode() const override { return !IsRootNode(); }
 
 	/** Perform any steps necessary prior to copying a node into the paste buffer */
-	virtual void PrepareForCopying() override;
+	void PrepareForCopying() override;
 
 	/**
 	 * Called when something external to this node has changed the connection list of any of the pins in the node
@@ -129,20 +130,20 @@ public:
 	 *	 us to do things like reconstruct the node safely without trashing pins we are already iterating on
 	 *   - Typically called after a user induced action like making a pin connection or a pin break
 	 */
-	virtual void NodeConnectionListChanged() override
+	void NodeConnectionListChanged() override
 	{
 		CheckDialogueNodeSyncWithGraphNode(true);
 		ApplyCompilerWarnings();
 	}
 
 	/** Called when the connection list of one of the pins of this node is changed in the editor */
-	virtual void PinConnectionListChanged(UEdGraphPin* Pin) override;
+	void PinConnectionListChanged(UEdGraphPin* Pin) override;
 
 	/** Gets a list of actions that can be done to this particular node */
 #if NY_ENGINE_VERSION >= 424
-	virtual void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;
+	void GetNodeContextMenuActions(UToolMenu* Menu, UGraphNodeContextMenuContext* Context) const override;
 #else
-	virtual void GetContextMenuActions(const FGraphNodeContextMenuBuilder& Context) const override;
+	void GetContextMenuActions(const FGraphNodeContextMenuBuilder& Context) const override;
 #endif
 
 	/**
@@ -150,27 +151,27 @@ public:
 	 *
 	 * @param FromPin	The source pin that caused the new node to be created (typically a drag-release context menu creation).
 	 */
-	virtual void AutowireNewNode(UEdGraphPin* FromPin) override;
+	void AutowireNewNode(UEdGraphPin* FromPin) override;
 
 	// Begin UDialogueGraphNode_Base interface
 
 	/** Checks whether an input connection can be added to this node */
-	virtual bool CanHaveInputConnections() const override;
+	bool CanHaveInputConnections() const override;
 
 	/** Checks whether an output connection can be added from this node */
-	virtual bool CanHaveOutputConnections() const override;
+	bool CanHaveOutputConnections() const override;
 
 	/** Checks if this node has a output connection to the TargetNode. */
-	virtual bool HasOutputConnectionToNode(const UEdGraphNode* TargetNode) const override;
+	bool HasOutputConnectionToNode(const UEdGraphNode* TargetNode) const override;
 
 	/** Gets the background color of this node. */
-	virtual FLinearColor GetNodeBackgroundColor() const override;
+	FLinearColor GetNodeBackgroundColor() const override;
 
 	/** Perform any fixups (deep copies of associated data, etc...) necessary after a node has been copied in the editor. */
-	virtual void PostCopyNode() override;
+	void PostCopyNode() override;
 
 	/** Perform all checks */
-	virtual void CheckAll() const override
+	void CheckAll() const override
 	{
 #if DO_CHECK
 		Super::CheckAll();
@@ -190,6 +191,8 @@ public:
 	/** Is this an End Node? */
 	bool IsEndNode() const { return DialogueNode->IsA<UDlgNode_End>(); }
 
+	bool IsStartNode() const { return DialogueNode->IsA<UDlgNode_Start>(); }
+
 	/** Is this a Speech Node? */
 	bool IsSpeechNode() const { return DialogueNode->IsA<UDlgNode_Speech>(); }
 
@@ -199,6 +202,16 @@ public:
 		if (const UDlgNode_Speech* Node = Cast<UDlgNode_Speech>(DialogueNode))
 		{
 			return Node->IsVirtualParent();
+		}
+
+		return false;
+	}
+
+	bool HasTypewriterEffect() const
+	{
+		if (const UDlgNode_Speech* Node = Cast<UDlgNode_Speech>(DialogueNode))
+		{
+			return Node->HasTypewriterEffect();
 		}
 
 		return false;
@@ -248,6 +261,46 @@ public:
 	bool HasEnterEvents() const
 	{
 		return DialogueNode ? DialogueNode->HasAnyEnterEvents() : false;
+	}
+
+	bool HasNextSpeechTimer() const
+	{
+		return DialogueNode ? DialogueNode->HasNextSpeechTimer() : false;
+	}
+
+
+	bool IsInterruptible() const
+	{
+		return DialogueNode ? DialogueNode->GetNodeInterruptInfo().bInterruptible : false;
+	}
+
+	bool HasRequestItem() const
+	{
+		return DialogueNode ? !DialogueNode->RequestItem.ItemName.IsNone() : false;
+	}
+	bool HasGivingItem() const
+	{
+		return DialogueNode ? !DialogueNode->GivingItem.ItemName.IsNone() : false;
+	}
+
+	bool HasCustomInterrupt() const
+	{
+		return DialogueNode ? DialogueNode->IsNodeCustomInterrupt() : false;
+	}
+
+	bool IsChangingNPCState() const
+	{
+		const bool ChangingNeed = DialogueNode->GetNodeEnterEvents().ContainsByPredicate([](const FDlgEvent& Event)
+		{
+			const FString Name = Event.GetCustomEventName();
+			return Name.StartsWith("ChangeNeed_");
+		});
+		return DialogueNode ? ChangingNeed : false;
+	}
+
+	bool HasCustomReturn() const
+	{
+		return DialogueNode->bCustomReturn;
 	}
 
 	/** Does this node has any voice properties set? */

@@ -8,6 +8,7 @@
 #if WITH_EDITOR
 #include "EdGraph/EdGraph.h"
 #include "EdGraph/EdGraphSchema.h"
+#include "Misc/DataValidation.h"
 #endif
 
 #include "DlgSystemModule.h"
@@ -21,6 +22,10 @@
 #include "DlgManager.h"
 #include "Logging/DlgLogger.h"
 #include "DlgHelper.h"
+
+#if WITH_EDITOR
+#include "Nodes/DlgNode_Proxy.h"
+#endif
 
 #define LOCTEXT_NAMESPACE "DlgDialogue"
 
@@ -272,6 +277,29 @@ void UDlgDialogue::PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged
 	// Signal to the listeners
 	check(OnDialoguePropertyChanged.IsBound());
 	OnDialoguePropertyChanged.Broadcast(PropertyChangedEvent);
+
+	if(PropertyChangedEvent.GetPropertyName() == "DialogueType")
+	{
+		if (DialogueType == EDialogueType::DLG_Base)
+		{
+			BitIntend = EPlayerAnswerIntend::BINT_Default;
+		}
+	}
+	if(PropertyChangedEvent.GetPropertyName() == "BitIntend")
+	{
+		if (BitIntend == EPlayerAnswerIntend::BINT_Leave)
+		{
+			ReturnToMainOnEnd = false;
+		}
+	}
+
+	if (PropertyChangedEvent.GetPropertyName() == "ParticipantsData")
+	{
+		if (!ParticipantsData.IsEmpty() && !ParticipantsData.begin().Key().IsNone())
+		{
+			MainParticipantName = ParticipantsData.begin().Key();
+		}
+	}
 }
 
 void UDlgDialogue::PostEditChangeChainProperty(struct FPropertyChangedChainEvent& PropertyChangedEvent)
@@ -1014,5 +1042,253 @@ FString UDlgDialogue::GetTextFilePathNameFromAssetPathName(const FString& AssetP
 
 // End own functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #undef LOCTEXT_NAMESPACE
+
+/*
+ * TallValidation
+ */
+#if WITH_EDITOR
+#define LOCTEXT_NAMESPACE "DlgDialogueValidation"
+/*copied from UTallEditorValidationSubsystem*/
+TMap<FName, FString> /*UTallEditorValidationSubsystem::*/GetAllEnumPropertiesAsStrings(const UObject* Object, const FString SubString)
+{
+	if (!Object)
+		return {};
+
+	TRACE_CPUPROFILER_EVENT_SCOPE(UDlgDialogue::GetAllEnumPropertiesAsStrings)
+
+	TMap<FName, FString> OutStrings;
+	for (TFieldIterator<FProperty> PropIt(Object->GetClass()); PropIt; ++PropIt)
+	{
+		FProperty* Property = *PropIt;
+
+		if (FEnumProperty* EnumProperty = CastField<FEnumProperty>(Property))
+		{
+			FString PropertyName = EnumProperty->GetName();
+
+			// Retrieve the enum type (UEnum object) associated with this property
+			UEnum* Enum = EnumProperty->GetEnum();
+			if (!Enum)
+				continue;
+
+			// Get the enum value as an integer
+			void* ValuePtr = EnumProperty->ContainerPtrToValuePtr<void>(const_cast<UObject*>(Object));
+			int64 EnumValue = EnumProperty->GetUnderlyingProperty()->GetSignedIntPropertyValue(ValuePtr);
+
+			// Get the enum value as a string
+			FString EnumValueString = Enum->GetNameStringByValue(EnumValue);
+
+			// Output the enum property name and value
+			// UE_LOG(LogTemp, Log, TEXT("Enum Property: %s, Value: %s, Is Valid: %s"), *PropertyName, *EnumValueString, Enum->IsValidEnumValue(EnumValue) ? TEXT("True") : TEXT("False"));
+			if(SubString.IsEmpty())
+				OutStrings.Add(FName(PropertyName), EnumValueString);
+			else if(EnumValueString.Contains(SubString, ESearchCase::CaseSensitive, ESearchDir::FromEnd))
+				OutStrings.Add(FName(PropertyName), EnumValueString);
+
+		}
+	}
+	return OutStrings;
+}
+
+
+
+
+EDataValidationResult UDlgDialogue::IsDataValid(class FDataValidationContext& Context) const
+{
+	if(Context.GetValidationUsecase() != EDataValidationUsecase::Manual)
+		return UObject::IsDataValid(Context);
+
+
+	//TODO IMPORTANT: move validation into separate file with static functions to be able to call from other classes
+
+	//TODO: to run IsDataValid on all conditions in this dialogue. I won't do it now because no one is using IsDataValid yet
+	TArray<UDlgConditionCustom> AllCustomConditions;
+	TArray<UDlgEventCustom> AllCustomEvents;
+
+	//Check enums on dialogue
+	for (const auto& InvalidEnumProp : GetAllEnumPropertiesAsStrings(this, "_MAX"))
+	{
+		Context.AddWarning(FText::Format(INVTEXT("Invalid Enum Property {0} ({1})."),
+			FText::FromString(InvalidEnumProp.Key.ToString()),
+			FText::FromString(InvalidEnumProp.Value)));
+	}
+
+
+	for (const auto Node : GetNodes())
+	{
+		//Check Nodes
+		//Check Proxy Nodes
+		if(auto ProxyNode = Cast<UDlgNode_Proxy>(Node))
+		{
+			if(!IsValidNodeIndex(ProxyNode->GetTargetNodeIndex()))
+			{
+				Context.AddError(FText::Format(INVTEXT("Invalid Target Index {0} on Proxy node {1} ({2})."),
+				ProxyNode->GetTargetNodeIndex(),
+				GetNodeIndexForGUID(Node->GetGUID()),
+				FText::FromString(Node->GetGUID().ToString())));
+			}
+		}
+
+
+		//Check Conditions
+		TArray<FDlgCondition> EnterConditions = Node->GetNodeEnterConditions();
+		for (int i = 0; i < EnterConditions.Num(); i++)
+		{
+			const FDlgCondition& Condition = EnterConditions[i];
+			if(Condition.ConditionType == EDlgConditionType::Custom)
+			{
+				if(Condition.CustomCondition == nullptr)
+				{
+					Context.AddWarning(FText::Format(INVTEXT("Null Custom Condition on node {0} ({1})."),
+						GetNodeIndexForGUID(Node->GetGUID()),
+						FText::FromString(Node->GetGUID().ToString())));
+					continue;
+				};
+				for (const auto& InvalidEnumProp : GetAllEnumPropertiesAsStrings(Condition.CustomCondition, "_MAX"))
+				{
+					Context.AddWarning(FText::Format(INVTEXT("Invalid Enum Property {0} ({1}) on Custom Condition {2} (Node {3} ({4}))."),
+						FText::FromString(InvalidEnumProp.Key.ToString()),
+						FText::FromString(InvalidEnumProp.Value),
+						FText::FromString(Condition.CustomCondition->GetName()),
+						GetNodeIndexForGUID(Node->GetGUID()),
+						FText::FromString(Node->GetGUID().ToString())
+						));
+				}
+			}
+			//if want to check any class variable
+			else if (Condition.ConditionType == EDlgConditionType::ClassBoolVariable ||
+				Condition.ConditionType == EDlgConditionType::ClassFloatVariable ||
+				Condition.ConditionType == EDlgConditionType::ClassIntVariable ||
+				Condition.ConditionType == EDlgConditionType::ClassNameVariable)
+			{
+				auto Class = GetParticipantClass(Condition.ParticipantName);
+				if(Class && !Class->FindPropertyByName(Condition.CallbackName))
+				{
+					Context.AddWarning(FText::Format(INVTEXT("Property \"{0}\" doesn't exist in class {1} on Condition {2} (Node {3} ({4}))."),
+						FText::FromString(Condition.CallbackName.ToString()),
+						FText::FromString(Class->GetName()),
+						FText::FromString(Condition.ConditionTypeToString(Condition.ConditionType)),
+						GetNodeIndexForGUID(Node->GetGUID()),
+						FText::FromString(Node->GetGUID().ToString())
+					));
+				}
+			}
+
+		}
+
+		//Check Enter Events
+		TArray<FDlgEvent> EnterEvents = Node->GetNodeEnterEvents();
+		for (const FDlgEvent& Event : EnterEvents)
+		{
+
+			if (Event.CustomEvent)
+			{
+				Event.CustomEvent->IsDataValid(Context);
+
+				for (const auto& InvalidEnumProp : GetAllEnumPropertiesAsStrings(Event.CustomEvent, "_MAX"))
+				{
+					Context.AddWarning(FText::Format(INVTEXT("Invalid Enum Property {0} ({1}) on Custom Event {2} (Node {3} ({4}))."),
+						FText::FromString(InvalidEnumProp.Key.ToString()),
+						FText::FromString(InvalidEnumProp.Value),
+						FText::FromString(Event.CustomEvent->GetName()),
+						GetNodeIndexForGUID(Node->GetGUID()),
+						FText::FromString(Node->GetGUID().ToString())
+						));
+				}
+			}
+			else if (Event.EventType == EDlgEventType::Custom)
+			{
+				Context.AddWarning(FText::Format(INVTEXT("Custom Event is null on Node {0} ({1})."),
+					GetNodeIndexForGUID(Node->GetGUID()),
+					FText::FromString(Node->GetGUID().ToString())
+				));
+			}
+			else if (Event.EventType == EDlgEventType::ModifyClassBoolVariable ||
+				Event.EventType == EDlgEventType::ModifyClassFloatVariable ||
+				Event.EventType == EDlgEventType::ModifyClassIntVariable ||
+				Event.EventType == EDlgEventType::ModifyClassNameVariable)
+			{
+				auto Class = GetParticipantClass(Event.ParticipantName);
+				if(Class)
+				{
+
+				}
+				if(Class && (!Class->FindPropertyByName(Event.EventName) && !Class->FindFunctionByName(Event.EventName)))
+				{
+					Context.AddWarning(FText::Format(INVTEXT("Property (or event) \"{0}\" doesn't exist in class {1} on Event {2} (Node {3} ({4}))."),
+						FText::FromString(Event.EventName.ToString()),
+						FText::FromString(Class->GetName()),
+						FText::FromString(Event.EventTypeToString(Event.EventType)),
+						GetNodeIndexForGUID(Node->GetGUID()),
+						FText::FromString(Node->GetGUID().ToString())
+					));
+				}
+			}
+
+		}
+
+		//Check edges
+		for(const FDlgEdge& Edge : Node->GetNodeChildren())
+		{
+			const auto EnumString = UEnum::GetValueAsString(Edge.EdgeIntend);
+			if(EnumString.Contains("_MAX", ESearchCase::CaseSensitive, ESearchDir::FromEnd))
+			{
+				Context.AddWarning(FText::Format(INVTEXT("Invalid Intend on edge from {0} to {1}."),
+					GetNodeIndexForGUID(Node->GetGUID()),
+					Edge.TargetIndex));
+			}
+			for (const auto& InvalidEnumProp : GetAllEnumPropertiesAsStrings(Edge.EdgeData, "_MAX"))
+			{
+				Context.AddWarning(FText::Format(INVTEXT("Invalid Enum Property {0} ({1}) on edge from {2} (Node {3} ({4}))."),
+					FText::FromString(InvalidEnumProp.Key.ToString()),
+					FText::FromString(InvalidEnumProp.Value),
+					FText::FromString(Edge.EdgeData->GetName()),
+					GetNodeIndexForGUID(Node->GetGUID()),
+					FText::FromString(Node->GetGUID().ToString())
+					));
+			}
+
+			if (Edge.IsTextVisible(*Node) && !Edge.GetText().IsEmpty() && Edge.GetText().ToString() != "Finish")
+			{
+				if (!Edge.GetText().ShouldGatherForLocalization())
+				{
+					FText ErrorText= FText::Format(INVTEXT("NOT LOCALIZABLE text on edge from {0} (Node {1} ({2}))."),
+						FText::FromString(Edge.EdgeData ? Edge.EdgeData->GetName() : "Edge data invalid"),
+						GetNodeIndexForGUID(Node->GetGUID()),
+						FText::FromString(Node->GetGUID().ToString()));
+					// Context.AddError();
+
+					TSharedRef<FTokenizedMessage> Message = FTokenizedMessage::Create(EMessageSeverity::Error);
+					Message->AddToken(FTextToken::Create(ErrorText));
+					Message->AddToken(FActionToken::Create(
+						FText::FromString("Open dialogue"),
+						FText::FromString(""),
+						FOnActionTokenExecuted::CreateLambda([&]()
+							{
+								GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorForAsset((this));
+								//todo: open exact node
+							})
+						));
+
+					Context.AddMessage(Message);
+
+				}
+
+
+			}
+
+			// if (!Edge.EdgeData)
+			// {
+			// 	Context.AddWarning(FText::Format(INVTEXT("Edge data Invalid (Node {0} ({1}))."),
+			// 		GetNodeIndexForGUID(Node->GetGUID()),
+			// 		FText::FromString(Node->GetGUID().ToString())
+			// 	));
+			// }
+		}
+	}
+	return (Context.GetNumErrors() > 0 || Context.GetNumWarnings() > 0) ? EDataValidationResult::Invalid : EDataValidationResult::Valid;
+}
+#undef LOCTEXT_NAMESPACE
+#endif
+
+

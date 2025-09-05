@@ -175,6 +175,13 @@ void UDialogueGraphNode_Edge::CreateConnections(UDialogueGraphNode* ParentNode, 
 	}
 }
 
+bool UDialogueGraphNode_Edge::HasUniqueTextConditions(FText DefaultTextEdgeToNormalNode, FText DefaultTextEdgeToEndNode) const
+{
+	//changed by Pecka
+	//UniqEdgeTextCondition changed to uniq edge intend
+	return DialogueEdge.GetOptionIntend()!= EPlayerAnswerIntend::BINT_Default && !DialogueEdge.GetText().EqualTo(DefaultTextEdgeToEndNode);
+}
+
 FLinearColor UDialogueGraphNode_Edge::GetEdgeColor(bool bIsHovered) const
 {
 	const UDlgSystemSettings* Settings = GetDefault<UDlgSystemSettings>();
@@ -193,6 +200,12 @@ FLinearColor UDialogueGraphNode_Edge::GetEdgeColor(bool bIsHovered) const
 	if (HasConditions() && Settings->bShowDifferentColorForConditionWires)
 	{
 		return Settings->WireWithConditionsColor;
+	}
+
+	// Wire has conditions
+	if (HasUniqueTextConditions(Settings->DefaultTextEdgeToNormalNode, Settings->DefaultTextEdgeToEndNode) && Settings->bShowDifferentColorForUniqueTextWires)
+	{
+		return Settings->WireWithUniqueTextColor;
 	}
 
 	// Normal coloring

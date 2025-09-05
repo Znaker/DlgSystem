@@ -47,6 +47,7 @@ void FDlgGraphNode_Details::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 	Dialogue = GraphNode->GetDialogue();
 	const UDlgNode& DialogueNode = GraphNode->GetDialogueNode();
 	const bool bIsRootNode = GraphNode->IsRootNode();
+	const bool bIsStartNode = GraphNode->IsStartNode();
 	const bool bIsEndNode = GraphNode->IsEndNode();
 	const bool bIsSpeechNode = GraphNode->IsSpeechNode();
 	const bool bIsSelectorNode = GraphNode->IsSelectorNode();;
@@ -87,10 +88,37 @@ void FDlgGraphNode_Details::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 			.Update();
 		}
 
+
 		// End Nodes and Proxy Nodes can't have children
 		if (!bIsEndNode && !bIsProxyNode)
 		{
 			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameCheckChildrenOnEvaluation()));
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameNextSpeechTimer()))
+				.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameCustomReturn()))
+				.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameNodeToReturnGUID()))
+				.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameNodeToReturnIndex()))
+				.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameNodeIsCustomInterrupt()))
+				.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameNodeInterruptInfo()))
+				.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberGivingNameItemName()))
+				.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberGettingNameItemName()))
+				.ShouldAutoExpand(true);
+		}
+
+		if (bIsEndNode)
+		{
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_End::GetMemberNameDialogueTransition()))
+			.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_End::GetMemberNameCustomReturnToMainOnEnd()))
+				.ShouldAutoExpand(true);
+			BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_End::GetMemberNameReturnToMainOnEnd()))
+				.ShouldAutoExpand(true);
 		}
 
 		BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameEnterConditions()))
@@ -100,6 +128,16 @@ void FDlgGraphNode_Details::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 
 		BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode::GetMemberNameEnterEvents()))
 			.ShouldAutoExpand(true);
+	}
+
+	if (bIsStartNode)
+	{
+		BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_Start::GetMemberNameBranchTag()))
+			.ShouldAutoExpand(true);
+		BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_Start::GetMemberNameBranchNumber()))
+		.ShouldAutoExpand(true);
+		BaseDataCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_Start::GetMemberNameExcludeFromDefaultStart()))
+		.ShouldAutoExpand(true);
 	}
 
 	// GUID
@@ -114,6 +152,7 @@ void FDlgGraphNode_Details::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		ChildrenPropertyRow->ShouldAutoExpand(true);
 		ChildrenPropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK_STATIC(&FDlgDetailsPanelUtils::GetChildrenVisibility));
 	}
+
 
 	// Do nothing
 	if (bIsRootNode)
@@ -178,6 +217,10 @@ void FDlgGraphNode_Details::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		SpeechCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_Speech::GetMemberNameTextArguments()))
 			.ShouldAutoExpand(true);
 
+
+		SpeechCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_Speech::GetMemberNameHasTypewriterEffect()));
+		SpeechCategory.AddProperty(PropertyDialogueNode->GetChildHandle(UDlgNode_Speech::GetMemberNameTypewriterDelay()));
+
 		//
 		// Data
 		//
@@ -226,6 +269,12 @@ void FDlgGraphNode_Details::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 			PropertyDialogueNode->GetChildHandle(UDlgNode_Speech::GetMemberNameVoiceDialogueWave())
 		);
 		VoiceDialogueWavePropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK_STATIC(&FDlgDetailsPanelUtils::GetVoiceDialogueWaveVisibility));
+
+		// DialogueWave
+		FmodEventPropertyRow =  &SpeechDataCategory.AddProperty(
+			PropertyDialogueNode->GetChildHandle(UDlgNode_Speech::GetMemberNameFMODEvent())
+		);
+		FmodEventPropertyRow->Visibility(CREATE_VISIBILITY_CALLBACK_STATIC(&FDlgDetailsPanelUtils::GetFmodEventVisibility));
 
 		// Generic Data, can be FMOD sound
 		GenericDataPropertyRow = &SpeechDataCategory.AddProperty(

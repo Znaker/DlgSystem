@@ -31,7 +31,7 @@ public:
 	 *								currently recording an active undo/redo transaction
 	 * @return true if the object was saved to the transaction buffer
 	 */
-	virtual bool Modify(bool bAlwaysMarkDirty = true) override;
+	bool Modify(bool bAlwaysMarkDirty = true) override;
 
 	// Begin UEdGraph
 	/** Remove a node from this graph. Variant of UEdGraph::RemoveNode */

@@ -1,6 +1,7 @@
 // Copyright Csaba Molnar, Daniel Butum. All Rights Reserved.
 #include "DlgNode_Speech.h"
 
+#include "Components/AudioComponent.h"
 #include "DlgSystem/DlgContext.h"
 #include "DlgSystem/DlgConstants.h"
 #include "DlgSystem/Logging/DlgLogger.h"
@@ -30,6 +31,7 @@ void UDlgNode_Speech::PostEditChangeProperty(FPropertyChangedEvent& PropertyChan
 	if (bTextChanged || PropertyName == GetMemberNameTextArguments())
 	{
 		RebuildTextArguments(true);
+		RebuildNextSpeechTimer();
 	}
 }
 
@@ -43,7 +45,7 @@ void UDlgNode_Speech::UpdateTextsValuesFromDefaultsAndRemappings(const UDlgSyste
 
 void UDlgNode_Speech::UpdateTextsNamespacesAndKeys(const UDlgSystemSettings& Settings, bool bEdges, bool bUpdateGraphNode)
 {
-	FDlgLocalizationHelper::UpdateTextNamespaceAndKey(GetOuter(), Settings, Text);
+	FDlgLocalizationHelper::UpdateTextNamespaceAndKey(GetOuter(), GetNodeParticipantName(), Settings, Text);
 	Super::UpdateTextsNamespacesAndKeys(Settings, bEdges, bUpdateGraphNode);
 }
 
@@ -62,10 +64,46 @@ void UDlgNode_Speech::RebuildConstructedText(const UDlgContext& Context)
 	ConstructedText = FText::AsCultureInvariant(FText::Format(Text, OrderedArguments));
 }
 
+void UDlgNode_Speech::RebuildNextSpeechTimer()
+{
+	if (bCustomTimer) return;
+
+	const UDlgSystemSettings* Settings = GetDefault<UDlgSystemSettings>();
+	if (!Settings)
+	{
+		return;
+	}
+
+	// Исходный текст из FText
+	FString SourceText = Text.ToString();
+
+	// Удаление всех тегов вида <...>
+	FRegexPattern TagPattern(TEXT("<[^>]*>"));
+	FRegexMatcher Matcher(TagPattern, SourceText);
+
+	// Заменяем все совпадения на пустую строку
+	while (Matcher.FindNext())
+	{
+		int32 MatchBegin = Matcher.GetMatchBeginning();
+		int32 MatchEnd = Matcher.GetMatchEnding();
+		SourceText.RemoveAt(MatchBegin, MatchEnd - MatchBegin);
+		Matcher = FRegexMatcher(TagPattern, SourceText); // пересоздаем matcher после изменения строки
+	}
+
+	// Считаем видимые символы
+	const int32 CharCount = SourceText.Len();
+	const float DelayPer10Char = Settings->SecondsFor10Char;
+	const float MinSpeechTime = Settings->MinSpeechTime;
+
+	// Округляем вверх
+	const float SpeechTime = FMath::CeilToFloat((CharCount / 10.0f) * DelayPer10Char);
+	SetTimeToNextSpeech(SpeechTime > MinSpeechTime ? SpeechTime : MinSpeechTime);
+}
+
 bool UDlgNode_Speech::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*> NodesEnteredWithThisStep)
 {
-	const bool bResult = Super::HandleNodeEnter(Context, NodesEnteredWithThisStep);
 	RebuildConstructedText(Context);
+	const bool bResult = Super::HandleNodeEnter(Context, NodesEnteredWithThisStep);
 
 	// Handle virtual parent enter events for direct children
 	if (bResult && bIsVirtualParent && Context.IsValidNodeIndex(VirtualParentFirstSatisfiedDirectChildIndex))
@@ -85,6 +123,13 @@ bool UDlgNode_Speech::HandleNodeEnter(UDlgContext& Context, TSet<const UDlgNode*
 			}
 		}
 	}
+
+	UAudioComponent* AudioComp = Context.GetActiveNodeParticipantAudioComponent();
+    if (AudioComp)
+    {
+     	AudioComp->SetSound(GetNodeVoiceSoundWave());
+     	AudioComp->Play();
+    }
 
 	return bResult;
 }

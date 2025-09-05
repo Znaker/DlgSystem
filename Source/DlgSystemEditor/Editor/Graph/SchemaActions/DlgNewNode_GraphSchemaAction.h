@@ -5,7 +5,6 @@
 #include "Templates/SubclassOf.h"
 
 #include "DlgSystem/Nodes/DlgNode.h"
-#include "DlgSystem/NYEngineVersionHelpers.h"
 
 #include "DlgNewNode_GraphSchemaAction.generated.h"
 
@@ -31,7 +30,7 @@ public:
 	) : FEdGraphSchemaAction(InNodeCategory, InMenuDesc, InToolTip, InGrouping), CreateNodeType(InCreateNodeType) {}
 
 	//~ Begin FEdGraphSchemaAction Interface
-	UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, FNYLocationVector2f Location, bool bSelectNewNode = true) override;
+	UEdGraphNode* PerformAction(UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
 	//~ End FEdGraphSchemaAction Interface
 
 	// Spawns a new UDialogueGraphNode of type GraphNodeType that must have a valid DialogueNode of TSubclassOf<UDlgNode>
@@ -39,7 +38,7 @@ public:
 	static GraphNodeType* SpawnGraphNodeWithDialogueNodeFromTemplate(
 		UEdGraph* ParentGraph,
 		TSubclassOf<UDlgNode> CreateNodeType,
-		const FNYVector2f Location,
+		const FVector2D Location,
 		bool bSelectNewNode = true
 	)
 	{
@@ -49,7 +48,7 @@ public:
 
 private:
 	/** Creates a new dialogue node from the template */
-	UEdGraphNode* CreateNode(UDlgDialogue* Dialogue, UEdGraph* ParentGraph, UEdGraphPin* FromPin, FNYVector2f Location, bool bSelectNewNode);
+	UEdGraphNode* CreateNode(UDlgDialogue* Dialogue, UEdGraph* ParentGraph, UEdGraphPin* FromPin, FVector2D Location, bool bSelectNewNode);
 
 	/** Connects new node to output of selected nodes */
 //	void ConnectToSelectedNodes(UDialogueNode* NewNodeclass, UEdGraph* ParentGraph) const;

@@ -6,8 +6,8 @@
 
 #include "Editor/Graph/DialogueGraph.h"
 #include "DlgSystem/Nodes/DlgNode.h"
-#include "DlgSystem/NYEngineVersionHelpers.h"
-#include "Subsystems/AssetEditorSubsystem.h"
+
+class UDlgNode_Speech;
 
 enum class EDlgBlueprintOpenType : uint8
 {
@@ -25,7 +25,6 @@ class UDlgNode;
 class UEdGraph;
 class FSlateRect;
 class UK2Node_Event;
-class IAssetEditorInstance;
 
 class DLGSYSTEMEDITOR_API FDlgEditorUtilities
 {
@@ -176,6 +175,7 @@ public:
 	 * If the file is already open in an editor, it will not create another editor window but instead bring it to front
 	 */
 	static bool OpenEditorAndJumpToGraphNode(const UEdGraphNode* GraphNode, bool bFocusIfOpen = false);
+	static void OpenTextInputDialog(UDlgNode_Speech* SpeechNode);
 
 	// Just jumps to that graph node without trying to open any Dialogue Editor
 	// If you want that just call OpenEditorAndJumpToGraphNode
@@ -203,11 +203,11 @@ public:
 	static EAppReturnType::Type ShowMessageBox(EAppMsgType::Type MsgType, const FString& Text, const FString& Caption);
 
 	// Returns true if the TestPoint is inside the Geometry.
-	static bool IsPointInsideGeometry(const FNYVector2f& TestPoint, const FGeometry& Geometry)
+	static bool IsPointInsideGeometry(const FVector2D& TestPoint, const FGeometry& Geometry)
 	{
-		TArray<FNYVector2f> GeometryPoints;
+		TArray<FVector2D> GeometryPoints;
 		FGeometryHelper::ConvertToPoints(Geometry, GeometryPoints);
-		return FNYBox2f(GeometryPoints).IsInside(TestPoint);
+		return FBox2D(GeometryPoints).IsInside(TestPoint);
 	}
 
 	/**
@@ -269,7 +269,7 @@ public:
 	static UK2Node_Event* BlueprintGetEvent(UBlueprint* Blueprint, FName EventName, UClass* EventClassSignature);
 
 	// Adds a comment to the Blueprint
-	static UEdGraphNode_Comment* BlueprintAddComment(UBlueprint* Blueprint, const FString& CommentString, FNYVector2f Location = FNYVector2f::ZeroVector);
+	static UEdGraphNode_Comment* BlueprintAddComment(UBlueprint* Blueprint, const FString& CommentString, FVector2D Location = FVector2D::ZeroVector);
 
 	static void RefreshDialogueEditorForGraph(const UEdGraph* Graph);
 

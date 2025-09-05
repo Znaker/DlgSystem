@@ -42,7 +42,7 @@ public:
 				{
 					if (bIsPrimitive)
 					{
-						OutError += FString::Printf(TEXT("\tThis.%s[%d] (%s) != Other.%s[%d] (%s)\n"),
+						OutError += FString::Printf(TEXT("\tThis.%s[%d] (%d) != Other.%s[%d] (%d)\n"),
 							*PropertyName, Index, *GetArrayTypeAsString(ThisArray[Index]), *PropertyName, Index, *GetArrayTypeAsString(OtherArray[Index]));
 					}
 					else

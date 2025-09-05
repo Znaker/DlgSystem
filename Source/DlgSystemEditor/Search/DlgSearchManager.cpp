@@ -621,6 +621,25 @@ bool FDlgSearchManager::QueryGraphNode(
 		) || bContainsSearchString;
 	}
 
+	if (const UDlgNode_Start* StartNode = Cast<UDlgNode_Start>(&Node))
+	{
+		if (!StartNode->BranchTag.IsNone())
+		{
+			if (StartNode->BranchTag.ToString().Contains(SearchFilter.SearchString))
+			{
+				bContainsSearchString = true;
+				MakeChildTextNode(
+					TreeGraphNode,
+					FText::FromName(StartNode->GetBranchTag()),
+					LOCTEXT("BranchTagKey", "Branch Tag"),
+					TEXT("Branch Tag")
+				);
+			}
+
+		}
+	}
+
+
 	// Test SpeakerState
 	if (!Node.GetSpeakerState().IsNone() &&
 		Node.GetSpeakerState().ToString().Contains(SearchFilter.SearchString))

@@ -51,6 +51,7 @@ public:
 
 	// Include the Custom Text Argument/Condition/Event/Node Data object names
 	bool bIncludeCustomObjectNames = true;
+
 };
 
 // Base class that matched the search results. When used by itself it is a simple text node.

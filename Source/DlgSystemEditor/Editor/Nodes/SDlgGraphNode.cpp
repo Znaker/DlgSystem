@@ -51,6 +51,14 @@ FReply SDlgGraphNode::OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, co
 		return Super::OnMouseButtonDoubleClick(InMyGeometry, InMouseEvent);
 	}
 
+	/*if (UDlgNode_Speech* SpeechNode = Cast<UDlgNode_Speech>(DialogueGraphNode->GetMutableDialogueNode()))
+	{
+		FText EditedText = FText();
+		FDlgEditorUtilities::OpenTextInputDialog(SpeechNode);
+		//SpeechNode->SetNodeText(EditedText);
+		return FReply::Handled();
+	}*/
+
 	const UDlgNode_Proxy* Proxy = Cast<UDlgNode_Proxy>(&DialogueGraphNode->GetDialogueNode());
 	if (Proxy == nullptr)
 	{
@@ -70,7 +78,7 @@ FReply SDlgGraphNode::OnMouseButtonDoubleClick(const FGeometry& InMyGeometry, co
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Begin SNodePanel::SNode Interface
-TArray<FOverlayWidgetInfo> SDlgGraphNode::GetOverlayWidgets(bool bSelected, const FNYVector2f& WidgetSize) const
+TArray<FOverlayWidgetInfo> SDlgGraphNode::GetOverlayWidgets(bool bSelected, const FVector2D& WidgetSize) const
 {
 	check(IndexOverlayWidget.IsValid());
 	check(ConditionOverlayWidget.IsValid());
@@ -78,16 +86,22 @@ TArray<FOverlayWidgetInfo> SDlgGraphNode::GetOverlayWidgets(bool bSelected, cons
 	check(VoiceOverlayWidget.IsValid());
 	check(GenericOverlayWidget.IsValid());
 
+	check(RequestItemWidget.IsValid());
+	check(GivingItemWidget.IsValid());
+	check(InterruptWidget.IsValid());
+	check(StateWidget.IsValid());
+	check(ReturnWidget.IsValid());
+
 	TArray<FOverlayWidgetInfo> Widgets;
 	static constexpr float DistanceBetweenWidgetsY = 1.5f;
-	FNYVector2f OriginRightSide(0.0f, 0.0f);
-	FNYVector2f OriginLeftSide(0.0f, 0.0f);
+	FVector2D OriginRightSide(0.0f, 0.0f);
+	FVector2D OriginLeftSide(0.0f, 0.0f);
 
 	// Add Index overlay
 	{
 		// Position on the right of the node
 		FOverlayWidgetInfo Overlay(IndexOverlayWidget);
-		Overlay.OverlayOffset = FNYVector2f(WidgetSize.X - IndexOverlayWidget->GetDesiredSize().X / 2.0f, OriginRightSide.Y);
+		Overlay.OverlayOffset = FVector2D(WidgetSize.X - IndexOverlayWidget->GetDesiredSize().X / 2.0f, OriginRightSide.Y);
 		Widgets.Add(Overlay);
 		OriginRightSide.Y += IndexOverlayWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
 	}
@@ -97,7 +111,7 @@ TArray<FOverlayWidgetInfo> SDlgGraphNode::GetOverlayWidgets(bool bSelected, cons
 	{
 		// Position on the right of the node
 		FOverlayWidgetInfo Overlay(VoiceOverlayWidget);
-		Overlay.OverlayOffset = FNYVector2f(WidgetSize.X - VoiceOverlayWidget->GetDesiredSize().X / 3.0f, OriginRightSide.Y);
+		Overlay.OverlayOffset = FVector2D(WidgetSize.X - VoiceOverlayWidget->GetDesiredSize().X / 3.0f, OriginRightSide.Y);
 		Widgets.Add(Overlay);
 		OriginRightSide.Y += VoiceOverlayWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
 	}
@@ -107,7 +121,7 @@ TArray<FOverlayWidgetInfo> SDlgGraphNode::GetOverlayWidgets(bool bSelected, cons
 	{
 		// Position on the right of the node
 		FOverlayWidgetInfo Overlay(GenericOverlayWidget);
-		Overlay.OverlayOffset = FNYVector2f(WidgetSize.X - GenericOverlayWidget->GetDesiredSize().X / 3.0f, OriginRightSide.Y);
+		Overlay.OverlayOffset = FVector2D(WidgetSize.X - GenericOverlayWidget->GetDesiredSize().X / 3.0f, OriginRightSide.Y);
 		Widgets.Add(Overlay);
 		OriginRightSide.Y += GenericOverlayWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
 	}
@@ -117,7 +131,7 @@ TArray<FOverlayWidgetInfo> SDlgGraphNode::GetOverlayWidgets(bool bSelected, cons
 	{
 		// Position on the left of the node
 		FOverlayWidgetInfo Overlay(ConditionOverlayWidget);
-		Overlay.OverlayOffset = FNYVector2f(-ConditionOverlayWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
+		Overlay.OverlayOffset = FVector2D(-ConditionOverlayWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
 		Widgets.Add(Overlay);
 		OriginLeftSide.Y += ConditionOverlayWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
 	}
@@ -127,12 +141,65 @@ TArray<FOverlayWidgetInfo> SDlgGraphNode::GetOverlayWidgets(bool bSelected, cons
 	{
 		// Position on the left of the node
 		FOverlayWidgetInfo Overlay(EventOverlayWidget);
-		Overlay.OverlayOffset = FNYVector2f(-EventOverlayWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
+		Overlay.OverlayOffset = FVector2D(-EventOverlayWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
 		Widgets.Add(Overlay);
 		OriginLeftSide.Y += EventOverlayWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
 	}
 
+	//by Pecka
+
+	// Add Event overlay
+	if (Settings->bShowHasEnterEventsIcon && DialogueGraphNode->HasRequestItem())
+	{
+		// Position on the left of the node
+		FOverlayWidgetInfo Overlay(RequestItemWidget);
+		Overlay.OverlayOffset = FVector2D(-RequestItemWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
+		Widgets.Add(Overlay);
+		OriginLeftSide.Y += RequestItemWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
+	}
+	// Add Event overlay
+	if (Settings->bShowHasGivingItemIcon && DialogueGraphNode->HasGivingItem())
+	{
+		// Position on the left of the node
+		FOverlayWidgetInfo Overlay(GivingItemWidget);
+		Overlay.OverlayOffset = FVector2D(-GivingItemWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
+		Widgets.Add(Overlay);
+		OriginLeftSide.Y += GivingItemWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
+	}
+	// Add Event overlay
+	if (Settings->bShowHasCustomInterruptIcon && DialogueGraphNode->HasCustomInterrupt())
+	{
+		// Position on the left of the node
+		FOverlayWidgetInfo Overlay(InterruptWidget);
+		Overlay.OverlayOffset = FVector2D(-InterruptWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
+		Widgets.Add(Overlay);
+		OriginLeftSide.Y += InterruptWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
+	}
+	// Add Event overlay
+	if (Settings->bShowHasChangingNPCStateIcon && DialogueGraphNode->IsChangingNPCState())
+	{
+		// Position on the left of the node
+		FOverlayWidgetInfo Overlay(StateWidget);
+		Overlay.OverlayOffset = FVector2D(-StateWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
+		Widgets.Add(Overlay);
+		OriginLeftSide.Y += StateWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
+	}
+	// Add Event overlay
+	if (Settings->bShowHasCustomReturnIcon && DialogueGraphNode->HasCustomReturn())
+	{
+		// Position on the left of the node
+		FOverlayWidgetInfo Overlay(ReturnWidget);
+		Overlay.OverlayOffset = FVector2D(-ReturnWidget->GetDesiredSize().X / 1.5f, OriginLeftSide.Y);
+		Widgets.Add(Overlay);
+		OriginLeftSide.Y += ReturnWidget->GetDesiredSize().Y + DistanceBetweenWidgetsY;
+	}
+
 	return Widgets;
+}
+
+void SDlgGraphNode::GetOverlayBrushes(bool bSelected, const FVector2D WidgetSize, TArray<FOverlayBrushInfo>& Brushes) const
+{
+	Super::GetOverlayBrushes(bSelected, WidgetSize, Brushes);
 }
 
 // End SNodePanel::SNode Interface
@@ -142,8 +209,27 @@ TArray<FOverlayWidgetInfo> SDlgGraphNode::GetOverlayWidgets(bool bSelected, cons
 // Begin SGraphNode interface
 void SDlgGraphNode::UpdateGraphNode()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(SDialogueGraphNode::UpdateGraphNode)
+
 	Super::UpdateGraphNode();
 	SetupErrorReporting();
+
+	//TODO: tooltip message - find out what type of information shall be conveyed
+	// if (Settings->bShowHasEnterConditionsIcon && DialogueGraphNode->HasEnterConditions())
+	// {
+	// 	FString TempString;
+	// 	for(auto Condition : DialogueGraphNode->GetDialogueNode().GetNodeEnterConditions())
+	// 	{
+	// 		if(Condition.ConditionType == EDlgConditionType::Custom)
+	// 		{
+	//
+	// 		}
+	// 		TempString += FString::Printf(TEXT("%s"), *UEnum::GetValueAsString(Condition.ConditionType));
+	// 		TempString += LINE_TERMINATOR;
+	// 	}
+	// 	FString FinalString = FString("Node has enter conditions:") + LINE_TERMINATOR + TempString;
+	// 	ConditionIconToolTip = FText::FromString(FinalString);
+	// }
 
 	// Define other useful variables
 	const FMargin NodePadding = 10.0f;
@@ -164,6 +250,29 @@ void SDlgGraphNode::UpdateGraphNode()
 	// Fit to content
 	static constexpr int WidthOverride = 24;
 	static constexpr int HeightOverride = 24;
+
+	//Lambda func
+	// const auto CreateOverlayWidget = [&](TSharedPtr<SWidget>& OverlayWidget, FName PropertyName, FText (SDlgGraphNode::*GetToolTipFunc)() const)
+	// {
+	// 	if(OverlayWidget)
+	// 		return;
+	// 	OverlayWidget = SNew(SDlgNodeOverlayWidget)
+	// 	.OverlayBody(
+	// 		SNew(SBox)
+	// 		.HAlign(HAlign_Fill)
+	// 		.VAlign(VAlign_Fill)
+	// 		.WidthOverride(WidthOverride)
+	// 		.HeightOverride(HeightOverride)
+	// 		[
+	// 			SNew(SImage)
+	// 			.Image(FDlgStyle::Get()->GetBrush(PropertyName))
+	// 		]
+	// 	)
+	// 	.ToolTipText(this, GetToolTipFunc)
+	// 	.Visibility(this, &SDlgGraphNode::GetOverlayWidgetVisibility)
+	// 	.OnGetBackgroundColor(this, &SDlgGraphNode::GetOverlayWidgetBackgroundColor);
+	// };
+
 	ConditionOverlayWidget = SNew(SDlgNodeOverlayWidget)
 		.OverlayBody(
 			SNew(SBox)
@@ -228,6 +337,89 @@ void SDlgGraphNode::UpdateGraphNode()
 		.Visibility(this, &Self::GetOverlayWidgetVisibility)
 		.OnGetBackgroundColor(this, &Self::GetOverlayWidgetBackgroundColor);
 
+
+	//by Pecka
+	RequestItemWidget = SNew(SDlgNodeOverlayWidget)
+		.OverlayBody(
+			SNew(SBox)
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Fill)
+			.WidthOverride(WidthOverride)
+			.HeightOverride(HeightOverride)
+			[
+				SNew(SImage)
+				.Image(FDlgStyle::Get()->GetBrush(FDlgStyle::PROPERTY_RequestItemIcon))
+			]
+		)
+		.ToolTipText(this, &Self::GetRequestItemOverlayTooltipText)
+		.Visibility(this, &Self::GetOverlayWidgetVisibility)
+		.OnGetBackgroundColor(this, &Self::GetOverlayWidgetBackgroundColor);
+
+	GivingItemWidget = SNew(SDlgNodeOverlayWidget)
+			.OverlayBody(
+				SNew(SBox)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				.WidthOverride(WidthOverride)
+				.HeightOverride(HeightOverride)
+				[
+					SNew(SImage)
+					.Image(FDlgStyle::Get()->GetBrush(FDlgStyle::PROPERTY_GivingItemIcon))
+				]
+			)
+			.ToolTipText(this, &Self::GetGivingItemOverlayTooltipText)
+			.Visibility(this, &Self::GetOverlayWidgetVisibility)
+			.OnGetBackgroundColor(this, &Self::GetOverlayWidgetBackgroundColor);
+
+	InterruptWidget = SNew(SDlgNodeOverlayWidget)
+			.OverlayBody(
+				SNew(SBox)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				.WidthOverride(WidthOverride)
+				.HeightOverride(HeightOverride)
+				[
+					SNew(SImage)
+					.Image(FDlgStyle::Get()->GetBrush(FDlgStyle::PROPERTY_InterruptIcon))
+				]
+			)
+			.ToolTipText(this, &Self::GetCustomInterruptOverlayTooltipText)
+			.Visibility(this, &Self::GetOverlayWidgetVisibility)
+			.OnGetBackgroundColor(this, &Self::GetOverlayWidgetBackgroundColor);
+
+
+	StateWidget = SNew(SDlgNodeOverlayWidget)
+			.OverlayBody(
+				SNew(SBox)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				.WidthOverride(WidthOverride)
+				.HeightOverride(HeightOverride)
+				[
+					SNew(SImage)
+					.Image(FDlgStyle::Get()->GetBrush(FDlgStyle::PROPERTY_StateIcon))
+				]
+			)
+			.ToolTipText(this, &Self::GetChangingNPCStateOverlayTooltipText)
+			.Visibility(this, &Self::GetOverlayWidgetVisibility)
+			.OnGetBackgroundColor(this, &Self::GetOverlayWidgetBackgroundColor);
+
+	ReturnWidget = SNew(SDlgNodeOverlayWidget)
+			.OverlayBody(
+				SNew(SBox)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				.WidthOverride(WidthOverride)
+				.HeightOverride(HeightOverride)
+				[
+					SNew(SImage)
+					.Image(FDlgStyle::Get()->GetBrush(FDlgStyle::PROPERTY_ReturnIcon))
+				]
+			)
+			.ToolTipText(this, &Self::GetCustomReturnOverlayTooltipText)
+			.Visibility(this, &Self::GetOverlayWidgetVisibility)
+			.OnGetBackgroundColor(this, &Self::GetOverlayWidgetBackgroundColor);
+
 	// Set Default tooltip
 	if (!SWidget::GetToolTip().IsValid())
 	{
@@ -289,13 +481,8 @@ void SDlgGraphNode::UpdateGraphNode()
 
 		// Add it at the top, right above
 		GetOrAddSlot(ENodeZone::TopCenter)
-#if NY_ENGINE_VERSION >= 506
-			.SlotOffset2f(TAttribute<FVector2f>(CommentBubble.Get(), &SCommentBubble::GetOffset2f))
-			.SlotSize2f(TAttribute<FVector2f>(CommentBubble.Get(), &SCommentBubble::GetSize2f))
-#else
 			.SlotOffset(TAttribute<FVector2D>(CommentBubble.Get(), &SCommentBubble::GetOffset))
 			.SlotSize(TAttribute<FVector2D>(CommentBubble.Get(), &SCommentBubble::GetSize))
-#endif
 			.AllowScaling(TAttribute<bool>(CommentBubble.Get(), &SCommentBubble::IsScalingAllowed))
 			.VAlign(VAlign_Top)
 			[
@@ -554,6 +741,11 @@ FText SDlgGraphNode::GetDescription() const
 				return Nodes[TargetNodeIndex]->GetNodeUnformattedText();
 			}
 		}
+		else if (const UDlgNode_Start* AsStart = Cast<UDlgNode_Start>(&DlgNode))
+		{
+			const FName BranchTag = AsStart->GetBranchTag();
+			return BranchTag.IsNone() ? FText::GetEmpty() : FText::FromName(BranchTag);
+		}
 		else
 		{
 			return DialogueGraphNode->GetDialogueNode().GetNodeUnformattedText();
@@ -600,6 +792,28 @@ FText SDlgGraphNode::GetVoiceOverlayTooltipText() const
 FText SDlgGraphNode::GetGenericOverlayTooltipText() const
 {
 	return LOCTEXT("NodeGenericTooltip", "Node has the generic data variable set.");
+}
+
+//by Pecka
+FText SDlgGraphNode::GetRequestItemOverlayTooltipText() const
+{
+	return LOCTEXT("Request Item", "Node has item request");
+}
+FText SDlgGraphNode::GetGivingItemOverlayTooltipText() const
+{
+	return LOCTEXT("Giving Item", "Node has giving item");
+}
+FText SDlgGraphNode::GetCustomInterruptOverlayTooltipText() const
+{
+	return LOCTEXT("Custom Interrupt", "Node has custom interrupt logic.");
+}
+FText SDlgGraphNode::GetChangingNPCStateOverlayTooltipText() const
+{
+	return LOCTEXT("Changing NPC State", "Node changes owner NPC need");
+}
+FText SDlgGraphNode::GetCustomReturnOverlayTooltipText() const
+{
+	return LOCTEXT("Custom return", "Node has custom return logic.");
 }
 
 void SDlgGraphNode::OnIndexHoverStateChanged(bool bHovered)

@@ -34,11 +34,12 @@ public class DlgSystem : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Projects", // IPluginManager
-
+				"FMODStudio",
 				// UI
 				"SlateCore",
 				"Slate",
-				"InputCore"
+				"InputCore",
+				"TallProject"
 				// ... add private dependencies that you statically link with here ...
 			});
 

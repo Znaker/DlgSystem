@@ -93,7 +93,6 @@ bool FDlgCondition::IsConditionMet(const UDlgContext& Context, const UObject* Pa
 		case EDlgConditionType::ClassNameVariable:
 			return CheckName(Context, FNYReflectionHelper::GetVariable<FNameProperty, FName>(Participant, CallbackName));
 
-
 		case EDlgConditionType::WasNodeVisited:
 			return Context.IsNodeVisited(IntValue, GUID, !bLongTermMemory) == bBoolValue;
 

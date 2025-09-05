@@ -4,7 +4,6 @@
 #include "EdGraph/EdGraph.h"
 #include "EditorStyleSet.h"
 #include "Framework/Application/SlateApplication.h"
-#include "EdGraph/EdGraphSchema.h"
 
 #include "DlgSystem/NYEngineVersionHelpers.h"
 

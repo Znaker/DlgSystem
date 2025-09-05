@@ -965,13 +965,11 @@ void SDlgTextPropertyEditableTextBox::HandleLocalizableCheckStateChanged(ECheckB
 					NewNamespace,
 					NewKey
 					);
-
 #if NY_ENGINE_VERSION >= 505
 				EditableTextProperty->SetText(TextIndex, FText::AsLocalizable_Advanced(*NewNamespace, *NewKey, *PropertyValue.ToString()));
 #else
 				EditableTextProperty->SetText(TextIndex, FInternationalization::Get().ForUseOnlyByLocMacroAndGraphNodeTextLiterals_CreateText(*PropertyValue.ToString(), *NewNamespace, *NewKey));
 #endif // NY_ENGINE_VERSION >= 505
-
 			}
 		}
 	}

@@ -6,6 +6,7 @@
 #include "Nodes/DlgNode.h"
 #include "DlgMemory.h"
 #include "DlgParticipantName.h"
+#include "Nodes/DlgNode_Start.h"
 
 #include "DlgContext.generated.h"
 
@@ -146,6 +147,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Control")
 	bool HasDialogueEnded() const { return bDialogueEnded; }
 
+	UFUNCTION(Category = "Dialogue|Control")
+	void SetDialogueEnded(bool isDialogueEnded, bool isInterrupted);
+
 	//
 	// Use these functions if you don't care about unsatisfied player options:
 	//
@@ -250,6 +254,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	const FText& GetActiveNodeText() const;
 
+	/*const FTimerHandle& GetActiveNodeTimer() const;
+	void PauseActiveNodeTimer();
+	void UnpauseActiveNodeTimer();*/
+
 	// Gets the SpeakerState of the active node index
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	FName GetActiveNodeSpeakerState() const;
@@ -269,6 +277,9 @@ public:
 	UDialogueWave* GetActiveNodeVoiceDialogueWave() const;
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
+	UFMODEvent* GetActiveNodeFmodEvent() const;
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	UObject* GetActiveNodeGenericData() const;
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
@@ -282,9 +293,17 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	UObject* GetActiveNodeParticipant() const;
 
+
+	// Gets the Object associated with the active node participant name (owner name).
+	//UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
+	TPair<FName, UObject*> GetMainParticipant() const {return MainParticipant;};
+
 	// Gets the active node participant name (owner name).
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
 	FName GetActiveNodeParticipantName() const;
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
+	UAudioComponent* GetActiveNodeParticipantAudioComponent() const;
 
 	// Gets the active participant display name
 	UFUNCTION(BlueprintPure, Category = "Dialogue|ActiveNode")
@@ -538,6 +557,7 @@ public:
 
 	// Checks if the context could be started, used to check if there is any reachable node from the start node
 	static bool CanBeStarted(UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants);
+	static FGuid CanBeStartedFromStartNode(UDlgDialogue* InDialogue, const TMap<FName, UObject*>& InParticipants, const UDlgNode_Start* StartNode);
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue|Context")
 	FString GetContextString() const;
@@ -581,6 +601,20 @@ protected:
 	{
 		Participants = InParticipants;
 		SerializeParticipants();
+
+		//TODO:Change main participant choose logic
+		const auto PartName = GetDialogue()->GetMutableNodeFromIndex(0)->GetNodeParticipantName();
+		if (!Participants.IsEmpty())
+		{
+			for (auto Part : Participants)
+			{
+				if (Part.Key != "Player" && Part.Key == PartName)
+				{
+					MainParticipant = Part;
+					return;
+				}
+			}
+		}
 	}
 
 protected:
@@ -596,6 +630,9 @@ protected:
 	// the key is the return value of IDlgDialogueParticipant::GetParticipantName()
 	UPROPERTY()
 	TMap<FName, UObject*> Participants;
+
+	//UPROPERTY()
+	TPair<FName, UObject*> MainParticipant;
 
 	// The index of the active node in the dialogues Nodes array
 	int32 ActiveNodeIndex = INDEX_NONE;

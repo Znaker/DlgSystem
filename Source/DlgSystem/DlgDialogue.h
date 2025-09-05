@@ -9,7 +9,8 @@
 #include "IDlgEditorAccess.h"
 #include "DlgSystemSettings.h"
 #include "DlgDialogueParticipantData.h"
-
+#include "Nodes/DlgNode.h"
+#include "AnswerIntend.h"
 #if NY_ENGINE_VERSION >= 500
 #include "UObject/ObjectSaveContext.h"
 #endif
@@ -66,6 +67,14 @@ public:
 	// This is used to autocomplete and retrieve the Variables from that Class automatically when Using Class based Conditions/Events
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue|Participant", meta = (MustImplement = "/Script/DlgSystem.DlgDialogueParticipant"))
 	UClass* ParticipantClass = nullptr;
+};
+
+UENUM(BlueprintType)
+enum class EDialogueType : uint8
+{
+	DLG_Base	UMETA(DisplayName = "Base"),
+	DLG_Bit		UMETA(DisplayName = "Bit"),
+	DLG_SideBit	UMETA(DisplayName = "SideBit")
 };
 
 /**
@@ -291,6 +300,54 @@ public:
 			}
 		}
 		return nullptr;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	EDialogueType GetDialogueType() const
+	{
+		return DialogueType;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	EPlayerAnswerIntend GetBitIntend() const
+	{
+		return BitIntend;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	bool IsInterruptible() const
+	{
+		return bInterruptible;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	UDlgDialogue* GetDialogueOnTryInterrupt() const
+	{
+		return DialogueOnTryInterrupt;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	TArray<EPlayerAnswerIntend> GetInterruptExceptions() const
+	{
+		return InterruptExceptions;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	UDlgDialogue* GetLinkingDialogueOnReturn() const
+	{
+		return LinkingDialogueOnReturn;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	bool GetReturnToMainOnEnd() const
+	{
+		return ReturnToMainOnEnd;
+	}
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	FName GetMainParticipantName() const
+	{
+		return MainParticipantName;
 	}
 
 	// Gets all the SpeakerStates used inside this Dialogue
@@ -728,6 +785,29 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Dialogue")
 	FGuid GUID;
 
+protected:
+	UPROPERTY(EditAnywhere, Category = "Dialogue")
+	EDialogueType DialogueType = EDialogueType::DLG_Base;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue", meta = (EditCondition = "DialogueType == EDialogueType::DLG_Bit"))
+	EPlayerAnswerIntend BitIntend = EPlayerAnswerIntend::BINT_Default;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue")
+	bool bInterruptible = true;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bInterruptible", EditConditionHides))
+	UDlgDialogue* DialogueOnTryInterrupt;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue", meta = (EditCondition = "!bInterruptible", EditConditionHides))
+	TArray<EPlayerAnswerIntend> InterruptExceptions;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue", meta = (EditCondition = "DialogueType == EDialogueType::DLG_Bit", EditConditionHides))
+	UDlgDialogue* LinkingDialogueOnReturn;
+
+	UPROPERTY(EditAnywhere, Category = "Dialogue",  meta = (EditCondition = "DialogueType != EDialogueType::DLG_Base"))
+	bool ReturnToMainOnEnd = true;
+
+
 	// All the Participants that require for you to define its UClass otherwise the auto completion/suggestion won't work in case you want to modify/check Class variables.
 	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Dialogue")
 	TArray<FDlgParticipantClass> ParticipantsClasses;
@@ -735,6 +815,9 @@ protected:
 	// Gathered data about events/conditions for each participant (for bp nodes, suggestions, etc.)
 	UPROPERTY(VisibleAnywhere, AdvancedDisplay, Category = "Dialogue", Meta = (DlgNoExport))
 	TMap<FName, FDlgParticipantData> ParticipantsData;
+
+	UPROPERTY(VisibleAnywhere, AdvancedDisplay, Category = "Dialogue", Meta = (DlgNoExport))
+	FName MainParticipantName;
 
 	// All the speaker states used inside this Dialogue.
 	UPROPERTY(VisibleAnywhere, AdvancedDisplay, Category = "Dialogue", Meta = (DlgNoExport))
@@ -788,4 +871,13 @@ public:
 	/** Array of user data stored with the asset (for IInterface_AssetUserData implementation) */
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Instanced, Category = "Asset User Data")
 	TArray<TObjectPtr<UAssetUserData>> AssetUserData;
+
+/*
+ * TallValidation
+ */
+
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
+
 };
